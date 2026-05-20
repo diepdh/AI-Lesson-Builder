@@ -1,0 +1,37 @@
+.nav-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px; /* GATE-012 REQUIRED */
+  min-width: 120px; /* Ensure width is also sufficient */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-btn.prev {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.nav-btn.prev:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-btn.next {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.nav-btn.next:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.nav-btn.next:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

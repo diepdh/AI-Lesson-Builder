@@ -1,0 +1,82 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.health-banner {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  border-bottom: 1px solid #fecaca;
+  min-height: 50px;
+}
+
+.health-banner button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 4px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  min-height: 44px; /* GATE-012 REQUIRED */
+  min-width: 80px;  /* GATE-012 REQUIRED */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-header {
+  height: 60px;
+  background-color: #1e293b;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.status-indicators {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-dot.online { background-color: #10b981; }
+.status-dot.offline { background-color: #ef4444; }
+
+.status-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.status-tag.success { background-color: #065f46; color: #d1fae5; }
+.status-tag.warning { background-color: #92400e; color: #fef3c7; }
+
+.app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}

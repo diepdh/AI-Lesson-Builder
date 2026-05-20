@@ -1,0 +1,90 @@
+.voice-button-wrapper {
+  position: relative;
+}
+
+.voice-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #f8fafc;
+  border: 2px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 22px; /* Slightly more rounded */
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  color: #475569;
+  white-space: nowrap;
+  min-height: 44px; /* GATE-012 REQUIRED */
+  min-width: 120px; /* GATE-012 REQUIRED */
+}
+
+.voice-btn:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.voice-btn.listening {
+  background-color: #fee2e2;
+  border-color: #ef4444;
+  color: #b91c1c;
+  animation: pulse 1.5s infinite;
+}
+
+.voice-btn.processing {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+  cursor: wait;
+}
+
+.voice-btn.error {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+}
+
+.voice-icon {
+  font-size: 18px;
+}
+
+.voice-icon.listening {
+  color: #ef4444;
+}
+
+.voice-text {
+  font-size: 14px;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.voice-tooltip {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  background-color: #1e293b;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  width: 180px;
+  text-align: center;
+  z-index: 10;
+}
+
+.voice-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 15px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+}

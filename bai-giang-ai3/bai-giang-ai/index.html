@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 AI Là Gì? – Bài Giảng E-learning Lớp 1</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#ec4899 100%);min-height:100vh;display:flex;align-items:center;justify-content:center}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{background:#fff;border-radius:24px;padding:40px 36px;max-width:480px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.35);text-align:center}
+.setup-robot{font-size:64px;margin-bottom:12px;animation:bounce 2s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+#setup-screen h1{font-size:28px;color:#1e1b4b;margin-bottom:6px}
+#setup-screen .sub{color:#6b7280;font-size:15px;margin-bottom:24px}
+.field-label{font-size:14px;color:#374151;font-weight:600;text-align:left;display:block;margin-bottom:6px}
+#api-key-input{width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:15px;margin-bottom:8px;transition:border-color .2s}
+#api-key-input:focus{outline:none;border-color:#6366f1}
+.key-note{font-size:12px;color:#9ca3af;text-align:left;margin-bottom:20px}
+#start-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:15px 32px;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;width:100%;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(99,102,241,.4)}
+#start-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(99,102,241,.5)}
+.chrome-note{margin-top:16px;font-size:13px;color:#9ca3af}
+
+/* ── MAIN APP ── */
+#app{display:none;width:100%;max-width:960px;padding:12px}
+
+/* Header */
+.app-header{background:#fff;border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:16px;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.app-logo{font-size:22px;font-weight:800;color:#1e1b4b;white-space:nowrap}
+.progress-wrap{flex:1}
+.progress-bar{height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#6366f1,#ec4899);transition:width .4s ease;border-radius:4px}
+.progress-label{font-size:12px;color:#9ca3af;margin-top:4px}
+.module-badge{background:#ede9fe;color:#5b21b6;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap}
+
+/* Slide */
+.slide-wrapper{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);margin-bottom:12px;position:relative}
+#slide-img{width:100%;display:block;aspect-ratio:16/9;object-fit:contain;background:#f9fafb}
+.slide-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#f9fafb;font-size:18px;color:#9ca3af}
+
+/* Controls bar */
+.controls-bar{background:#fff;border-radius:14px;padding:12px 20px;display:flex;align-items:center;gap:12px;margin-bottom:12px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.nav-btn{background:#f3f4f6;border:none;width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.nav-btn:hover:not(:disabled){background:#e5e7eb}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed}
+#slide-counter{font-size:14px;color:#6b7280;min-width:54px;text-align:center}
+#tts-btn{display:flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+#tts-btn.playing{background:linear-gradient(135deg,#ef4444,#dc2626)}
+#tts-btn:hover{opacity:.9}
+.skip-note{font-size:12px;color:#9ca3af;margin-left:auto}
+
+/* Checkpoint card */
+#checkpoint-area{display:none;background:#fff;border-radius:16px;padding:24px;margin-bottom:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);border-left:5px solid #6366f1}
+#checkpoint-area.remedial{border-left-color:#f59e0b}
+.cp-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.cp-icon{font-size:26px}
+.cp-title{font-size:17px;font-weight:800;color:#1e1b4b}
+.cp-subtitle{font-size:12px;color:#9ca3af}
+#question-text{font-size:16px;color:#374151;line-height:1.6;margin-bottom:18px;font-weight:600}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.opt-btn{background:#f9fafb;border:2px solid #e5e7eb;padding:12px 14px;border-radius:12px;cursor:pointer;font-size:14px;text-align:left;line-height:1.4;transition:all .2s;color:#374151}
+.opt-btn:hover:not(.disabled){border-color:#6366f1;background:#ede9fe;color:#4338ca}
+.opt-btn.correct{border-color:#10b981!important;background:#d1fae5!important;color:#065f46!important}
+.opt-btn.wrong{border-color:#ef4444!important;background:#fee2e2!important;color:#991b1b!important}
+.opt-btn.disabled{cursor:default}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#9ca3af;font-size:13px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+.voice-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#voice-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border:2px solid #6366f1;background:#ede9fe;color:#4338ca;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600}
+#voice-btn.recording{border-color:#ef4444;background:#fee2e2;color:#991b1b;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+#voice-status{font-size:13px;color:#6b7280;font-style:italic}
+.text-row{display:flex;gap:8px}
+#text-input{flex:1;padding:10px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;transition:border-color .2s}
+#text-input:focus{outline:none;border-color:#6366f1}
+#submit-text-btn{background:#6366f1;color:#fff;border:none;padding:10px 18px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700}
+#feedback{display:none;margin-top:16px;padding:14px 16px;border-radius:12px;font-size:14px;line-height:1.6}
+#feedback.correct{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+#feedback.wrong{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+#continue-btn{display:none;width:100%;margin-top:14px;padding:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s}
+#continue-btn:hover{opacity:.9}
+
+/* Chatbot */
+#chat-toggle{position:fixed;bottom:24px;right:24px;width:58px;height:58px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:50%;font-size:26px;cursor:pointer;box-shadow:0 6px 24px rgba(99,102,241,.5);z-index:1000;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+#chat-toggle:hover{transform:scale(1.1)}
+#chatbot{position:fixed;bottom:96px;right:24px;width:340px;max-height:520px;background:#fff;border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,.2);display:none;flex-direction:column;z-index:999;overflow:hidden}
+.chat-header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px 18px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.chat-close{margin-left:auto;background:none;border:none;color:#fff;cursor:pointer;font-size:18px;opacity:.8}
+.chat-close:hover{opacity:1}
+#chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;max-height:360px}
+.msg{max-width:88%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.5}
+.msg.bot{background:#ede9fe;color:#1e1b4b;align-self:flex-start;border-radius:14px 14px 14px 4px}
+.msg.user{background:#6366f1;color:#fff;align-self:flex-end;border-radius:14px 14px 4px 14px}
+.msg.thinking{background:#f3f4f6;color:#9ca3af;align-self:flex-start;font-style:italic}
+.chat-input-area{padding:12px;border-top:1px solid #f3f4f6;display:flex;gap:8px}
+#chat-input{flex:1;padding:10px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px}
+#chat-input:focus{outline:none;border-color:#6366f1}
+#chat-send{background:#6366f1;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:16px}
+
+/* Success overlay */
+#success-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center}
+.success-card{background:#fff;border-radius:20px;padding:36px;text-align:center;max-width:400px;animation:pop .3s ease}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.success-card .big-emoji{font-size:64px;margin-bottom:12px}
+.success-card h2{font-size:22px;color:#1e1b4b;margin-bottom:8px}
+.success-card p{color:#6b7280;font-size:15px;margin-bottom:20px}
+.success-card button{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:12px 28px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+
+@media(max-width:600px){
+  .options-grid{grid-template-columns:1fr}
+  #chatbot{width:calc(100vw - 32px);right:16px}
+  .app-header{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SETUP SCREEN ══════════════ -->
+<div id="setup-screen">
+  <div class="setup-robot">🤖</div>
+  <h1>AI Là Gì?</h1>
+  <p class="sub">Bài học Lớp 1 · Khám phá Trí Tuệ Nhân Tạo</p>
+  <label class="field-label" for="api-key-input">🔑 Google Gemini API Key:</label>
+  <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off">
+  <p class="key-note">Dùng Google AI Studio API Key (miễn phí). Lấy tại <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> → Không lưu lại sau khi đóng trang.</p>
+  <button id="start-btn" onclick="startLesson()">🚀 Bắt đầu học!</button>
+  <p class="chrome-note">💡 Hãy dùng Chrome để có giọng đọc và nhận diện giọng nói tiếng Việt</p>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="app">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-logo">🤖 AI Là Gì?</div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">Slide 1/19</div>
+    </div>
+    <div class="module-badge" id="module-badge">Giới thiệu</div>
+  </div>
+
+  <!-- Slide display -->
+  <div class="slide-wrapper">
+    <img id="slide-img" src="slides/slide-01.jpg" alt="Slide bài giảng">
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-bar">
+    <button class="nav-btn" onclick="goPrev()" id="prev-btn" disabled>◀</button>
+    <span id="slide-counter">1 / 19</span>
+    <button id="tts-btn" onclick="toggleTTS()">🔊 Nghe</button>
+    <button class="nav-btn" onclick="goNext()" id="next-btn">▶</button>
+    <span class="skip-note" id="skip-note"></span>
+  </div>
+
+  <!-- Checkpoint -->
+  <div id="checkpoint-area">
+    <div class="cp-header">
+      <span class="cp-icon" id="cp-icon">❓</span>
+      <div>
+        <div class="cp-title" id="cp-title">Kiểm tra hiểu bài</div>
+        <div class="cp-subtitle" id="cp-subtitle">Trả lời để tiếp tục bài học</div>
+      </div>
+    </div>
+    <div id="question-text"></div>
+    <div class="options-grid" id="options-container"></div>
+
+    <div class="divider">hoặc nói câu trả lời</div>
+    <div class="voice-row">
+      <button id="voice-btn" onclick="toggleVoice()">🎤 Nói câu trả lời</button>
+      <span id="voice-status">Nhấn để nói...</span>
+    </div>
+
+    <div class="text-row" style="margin-top:8px">
+      <input type="text" id="text-input" placeholder="Hoặc gõ câu trả lời...">
+      <button id="submit-text-btn" onclick="submitTextAnswer()">Gửi</button>
+    </div>
+
+    <div id="feedback"></div>
+    <button id="continue-btn" onclick="continueAfterCheckpoint()">➡️ Tiếp tục bài học</button>
+  </div>
+</div>
+
+<!-- Success overlay (end of lesson) -->
+<div id="success-overlay">
+  <div class="success-card">
+    <div class="big-emoji">🎉</div>
+    <h2>Xuất sắc! Em đã hoàn thành bài học!</h2>
+    <p>Hôm nay em đã học về AI, phân loại AI/Không AI, và 3 quy tắc vàng khi dùng công nghệ!</p>
+    <button onclick="restartLesson()">🔄 Học lại từ đầu</button>
+  </div>
+</div>
+
+<!-- Chatbot -->
+<button id="chat-toggle" onclick="toggleChat()">💬</button>
+<div id="chatbot">
+  <div class="chat-header">
+    🤖 Hỏi cô giáo AI
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div id="chat-messages">
+    <div class="msg bot">Xin chào em! 😊 Em có thể hỏi cô bất kỳ điều gì về AI trong bài học hôm nay nhé!</div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="chat-input" placeholder="Hỏi cô giáo..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button id="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  LESSON DATA
+// ══════════════════════════════════════════
+const SLIDES = [
+  {
+    img:'slides/slide-01.jpg',
+    module:'Giới thiệu',
+    script:'Chào mừng các em đến với bài học hôm nay! Chúng ta sẽ cùng khám phá về một người bạn rất đặc biệt – đó là Trí Tuệ Nhân Tạo, hay còn gọi là AI! Chuẩn bị chưa nào? Bắt đầu thôi!',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-02.jpg',
+    module:'Gắn kết',
+    script:'Hoạt động một: Gắn kết! Hôm nay chúng ta sẽ gặp một người bạn rất đặc biệt đấy! Các em hãy chú ý nhé!',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-03.jpg',
+    module:'Gắn kết',
+    script:'Đây là người bạn đặc biệt của chúng ta! Một robot hút bụi đang tự chạy quanh phòng! Nó tự di chuyển, tự tránh chân bàn, ghế – mà không cần ai cầm điều khiển. Thật thú vị phải không?',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-04.jpg',
+    module:'Gắn kết',
+    script:'Robot vừa rồi làm được những việc gì? Nó tự đi, tự tránh chướng ngại vật, tự quay về sạc pin! Còn con người thì sao? Chúng ta vừa làm việc vừa cảm nhận được vui, buồn. Bây giờ cô muốn kiểm tra xem các em hiểu chưa nhé!',
+    checkpoint:{
+      question:'🤔 Robot hút bụi tự chạy và tự tránh đồ vật. Đó có phải là AI không?',
+      options:['✅ Có, đó là AI!','❌ Không, chỉ là máy thường','🤷 Em chưa biết'],
+      correct:0,
+      explanation:'🎉 Chính xác! Robot hút bụi CÓ AI vì nó tự học đường đi, tự tránh chướng ngại vật mà không cần người chỉ từng bước!',
+      remedial:{
+        script:'Bạn ơi, robot hút bụi tự chạy quanh phòng, tự biết tránh chân bàn, tự về chỗ sạc pin – mà không cần ai cầm điều khiển! Đó chính là AI – Trí Tuệ Nhân Tạo đấy! Hãy thử lại nhé!',
+        question:'Trợ lý ảo trên điện thoại – nghe và trả lời câu hỏi. Đó có phải AI không?',
+        options:['✅ Có, đó là AI!','❌ Không phải AI'],
+        correct:0
+      }
+    }
+  },
+  {
+    img:'slides/slide-05.jpg',
+    module:'Khám phá',
+    script:'Hoạt động hai: Khám phá! Giờ chúng ta chơi trò chơi phân loại nhé – AI hay Không AI?',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-06.jpg',
+    module:'Khám phá',
+    script:'Nhìn vào các thẻ hình này nhé! Chúng ta có: Robot hút bụi, Loa thông minh, Quạt điện, Bút chì, Điện thoại thông minh, và Bàn ủi. Đâu là AI? Đâu không phải AI? Nhớ nhé: AI là máy có thể TỰ HỌC và TỰ QUYẾT ĐỊNH!',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-07.jpg',
+    module:'Khám phá',
+    script:'Kết quả: AI gồm Robot hút bụi, Loa thông minh, Điện thoại thông minh. Không phải AI là Quạt điện, Bút chì, Bàn ủi. Vì sao? Quạt chỉ quay khi bấm nút – không tự học. Loa thông minh thì nghe tiếng nói và tự tìm câu trả lời – đó là AI! Giờ cô hỏi thêm nhé!',
+    checkpoint:{
+      question:'🔍 Cái nào KHÔNG phải AI?',
+      options:['🤖 Robot hút bụi tự chạy','📱 Điện thoại nhận diện khuôn mặt','💡 Bóng đèn bật khi bấm công tắc','🔊 Loa thông minh nghe lệnh giọng nói'],
+      correct:2,
+      explanation:'🌟 Đúng rồi! Bóng đèn không phải AI vì nó chỉ bật/tắt theo công tắc, không tự học, không tự quyết định gì cả.',
+      remedial:{
+        script:'AI cần có khả năng TỰ HỌC nhé! Bóng đèn chỉ làm một việc là bật khi có điện – nó không học, không quyết định. Nhưng robot hút bụi thì tự học đường đi trong phòng – đó mới là AI!',
+        question:'Bút chì có phải là AI không?',
+        options:['❌ Không, bút chì không phải AI','✅ Có, bút chì là AI'],
+        correct:0
+      }
+    }
+  },
+  {
+    img:'slides/slide-08.jpg',
+    module:'Giải thích',
+    script:'Hoạt động ba: Giải thích! Bây giờ cô sẽ giải thích rõ hơn AI là gì nhé!',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-09.jpg',
+    module:'Giải thích',
+    script:'AI – Trí Tuệ Nhân Tạo có ba đặc điểm quan trọng! Thứ nhất: AI là MÁY THÔNG MINH do con người tạo ra – không phải người thật! Thứ hai: AI HỌC TỪ DỮ LIỆU – từ hàng triệu hình ảnh, câu chuyện, âm thanh. Thứ ba: AI KHÔNG CÓ CẢM XÚC – nó không biết vui, buồn, hay yêu thương như chúng ta.',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-10.jpg',
+    module:'Giải thích',
+    script:'AI học giống như chúng ta học ở trường, nhưng nó học từ dữ liệu máy tính chứ không học từ sách vở và thầy cô. Dù AI rất thông minh, nó vẫn là máy – không có trái tim như các em!',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-11.jpg',
+    module:'Giải thích',
+    script:'Trò chơi đóng vai: Người và AI! AI chỉ làm việc khi nhận lệnh. Còn con người chúng ta có CẢM XÚC – có thể vui khi được khen, buồn khi bị mắng, và yêu thương gia đình. AI không có những điều đó! Hãy trả lời câu hỏi nhé!',
+    checkpoint:{
+      question:'💭 AI có biết vui hay buồn như con người không?',
+      options:['😊 Có, AI cũng có cảm xúc','🤖 Không, AI không có cảm xúc','🤔 AI chỉ biết vui thôi'],
+      correct:1,
+      explanation:'🎉 Đúng! AI không có cảm xúc. Dù AI rất thông minh, nó chỉ xử lý thông tin như máy tính. Chỉ có con người mới có cảm xúc thật sự!',
+      remedial:{
+        script:'Nhớ nhé: AI là MÁY. Robot không buồn khi bị đổ. Loa thông minh không vui khi được khen. Chỉ có các em – con người – mới có trái tim và cảm xúc thật sự!',
+        question:'Ai tạo ra AI?',
+        options:['👨‍💻 Con người tạo ra AI','🤖 AI tự tạo ra mình','🌍 Thiên nhiên tạo ra AI'],
+        correct:0
+      }
+    }
+  },
+  {
+    img:'slides/slide-12.jpg',
+    module:'Áp dụng',
+    script:'Hoạt động bốn: Áp dụng! Đến phần thử tài nhanh trí rồi – các em đã sẵn sàng chưa?',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-13.jpg',
+    module:'Áp dụng',
+    script:'Thử tài nhanh trí! Câu một: AI là con người thông minh – SAI nhé! AI là máy, không phải người. Câu hai: AI do con người tạo ra – ĐÚNG! Câu ba: AI biết yêu thương như con người – SAI! AI không có cảm xúc. Các em hãy trả lời câu hỏi sau!',
+    checkpoint:{
+      question:'🏆 Câu nào ĐÚNG về AI?',
+      options:['🧑 AI là con người thông minh','👨‍💻 AI do con người tạo ra','❤️ AI biết yêu thương như người','🌱 AI tự sinh ra trong tự nhiên'],
+      correct:1,
+      explanation:'🌟 Đúng! AI do con người tạo ra – đó là sự thật! AI không phải là người, không có cảm xúc, và không tự sinh ra trong tự nhiên.',
+      remedial:{
+        script:'Hãy nhớ: AI là MÁY MÓC do CON NGƯỜI tạo ra. Các kỹ sư lập trình, huấn luyện AI từ rất nhiều dữ liệu. AI không phải người, không có cảm xúc!',
+        question:'Đúng hay Sai: "AI không có cảm xúc"?',
+        options:['✅ Đúng','❌ Sai'],
+        correct:0
+      }
+    }
+  },
+  {
+    img:'slides/slide-14.jpg',
+    module:'Áp dụng',
+    script:'Tình huống quan trọng! Bạn An muốn dùng app AI trên điện thoại để nhận diện khuôn mặt. Trước khi dùng, bạn An cần làm gì? Hãy suy nghĩ nhé...',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-15.jpg',
+    module:'Áp dụng',
+    script:'Ba quy tắc vàng khi dùng công nghệ! Quy tắc một: Xin phép người lớn – bố mẹ hoặc thầy cô – trước khi dùng app AI. Quy tắc hai: Không chia sẻ thông tin riêng tư như tên đầy đủ, địa chỉ, số điện thoại. Quy tắc ba: Không đăng ảnh của bạn bè khi chưa xin phép. Các em nhớ chưa? Hãy trả lời câu hỏi!',
+    checkpoint:{
+      question:'🔐 Muốn dùng app AI, việc ĐẦU TIÊN em cần làm là gì?',
+      options:['📱 Dùng luôn cho nhanh','👨‍👩‍👧 Xin phép bố mẹ hoặc thầy cô','📸 Chụp ảnh bạn bè đăng lên','🏠 Chia sẻ địa chỉ nhà'],
+      correct:1,
+      explanation:'✅ Chính xác! Luôn XIN PHÉP NGƯỜI LỚN trước! Đó là quy tắc vàng số 1 để dùng công nghệ an toàn.',
+      remedial:{
+        script:'An toàn là số 1! Khi muốn dùng app AI hay bất kỳ công nghệ nào mới, hãy HỎI BỐ MẸ hoặc THẦY CÔ trước. Người lớn sẽ giúp em dùng đúng cách và an toàn!',
+        question:'Em có nên chia sẻ địa chỉ nhà mình trên app AI không?',
+        options:['❌ Không, đó là thông tin riêng tư','✅ Có, không sao cả'],
+        correct:0
+      }
+    }
+  },
+  {
+    img:'slides/slide-16.jpg',
+    module:'Đánh giá',
+    script:'Hoạt động năm: Đánh giá! Chúng ta đã học được rất nhiều điều thú vị hôm nay! Cô rất tự hào về các em!',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-17.jpg',
+    module:'Đánh giá',
+    script:'Bây giờ hãy vẽ hoặc viết một điều em nhớ nhất về AI hôm nay nhé! Có thể là AI là gì, ví dụ về AI, hay quy tắc an toàn. Không có câu trả lời sai đâu – hãy thể hiện những gì em đã học!',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-18.jpg',
+    module:'Đánh giá',
+    script:'Thời gian chia sẻ! Ai muốn kể cho cả lớp nghe điều mình nhớ nhất về AI hôm nay? Hãy dùng khung: Tên em là... Em đã học được... Điều em thích nhất là... Lần sau em muốn thử...',
+    checkpoint:null
+  },
+  {
+    img:'slides/slide-19.jpg',
+    module:'Tổng kết',
+    script:'Tổng kết bài học! Hôm nay các em đã biết: Một – AI là Trí Tuệ Nhân Tạo, máy thông minh do con người tạo ra. Hai – AI học từ dữ liệu và không có cảm xúc. Ba – Ví dụ AI gồm robot hút bụi, loa thông minh, điện thoại thông minh. Bốn – Ba quy tắc vàng: xin phép người lớn, không chia sẻ thông tin riêng, không đăng ảnh bạn khi chưa xin phép. Bài tập về nhà: tìm một thiết bị AI ở nhà, chụp ảnh hoặc vẽ lại và kể một câu hay về nó. Hẹn gặp lại các em trong bài học tiếp theo!',
+    checkpoint:null
+  }
+];
+
+const ASSISTANT_SYSTEM = `Bạn là cô giáo AI thân thiện dạy học sinh lớp 1 về chủ đề "AI là gì?".
+Phong cách: vui vẻ, ngắn gọn, dùng từ đơn giản, có emoji phù hợp.
+Chỉ trả lời trong phạm vi bài học. Tối đa 3-4 câu mỗi trả lời.
+
+Kiến thức bài học:
+- AI = Trí tuệ nhân tạo = máy thông minh do con người tạo ra
+- AI học từ dữ liệu (không học từ sách như người)
+- AI không có cảm xúc (không vui, không buồn, không yêu thương)
+- Ví dụ AI: robot hút bụi, loa thông minh, điện thoại nhận diện khuôn mặt
+- KHÔNG phải AI: quạt điện, bút chì, bàn ủi, bóng đèn
+- 3 quy tắc an toàn: xin phép người lớn, không chia sẻ thông tin riêng tư, không đăng ảnh bạn khi chưa xin phép`;
+
+// ══════════════════════════════════════════
+//  APP STATE
+// ══════════════════════════════════════════
+let STATE = {
+  apiKey: '',
+  currentSlide: 0,
+  ttsActive: false,
+  ttsUtterance: null,
+  checkpointLocked: false,   // waiting for correct answer
+  attempts: 0,               // attempts on current checkpoint
+  phase: 'main',             // 'main' or 'remedial'
+  recognizing: false,
+  recognition: null
+};
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+function startLesson() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) { alert('Vui lòng nhập API Key để bắt đầu!'); return; }
+  STATE.apiKey = key;
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('chat-toggle').style.display = 'flex';
+  showSlide(0);
+}
+
+function restartLesson() {
+  document.getElementById('success-overlay').style.display = 'none';
+  STATE.currentSlide = 0;
+  STATE.attempts = 0;
+  STATE.phase = 'main';
+  showSlide(0);
+}
+
+// ══════════════════════════════════════════
+//  SLIDE NAVIGATION
+// ══════════════════════════════════════════
+function showSlide(n) {
+  stopTTS();
+  const s = SLIDES[n];
+  STATE.currentSlide = n;
+  STATE.phase = 'main';
+  STATE.attempts = 0;
+
+  // Image
+  document.getElementById('slide-img').src = s.img;
+
+  // Header
+  document.getElementById('module-badge').textContent = s.module;
+  const pct = Math.round(((n+1)/SLIDES.length)*100);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('progress-label').textContent = `Slide ${n+1}/${SLIDES.length}`;
+  document.getElementById('slide-counter').textContent = `${n+1} / ${SLIDES.length}`;
+
+  // Nav buttons
+  document.getElementById('prev-btn').disabled = (n === 0);
+  const hasCheckpoint = !!s.checkpoint;
+  // next-btn: locked if checkpoint not yet passed
+  document.getElementById('next-btn').disabled = hasCheckpoint;
+  document.getElementById('skip-note').textContent = hasCheckpoint ? '⚠️ Trả lời câu hỏi để tiếp tục' : '';
+
+  // Hide checkpoint area
+  hideCheckpoint();
+
+  // Auto-play TTS
+  const audioKey = SLIDE_AUDIO_KEYS[n];
+  setTimeout(() => playTTS(s.script, () => {
+    if (s.checkpoint) showCheckpoint(s.checkpoint);
+    else enableNext();
+  }, audioKey), 400);
+}
+
+function goNext() {
+  if (STATE.currentSlide >= SLIDES.length - 1) {
+    document.getElementById('success-overlay').style.display = 'flex';
+    return;
+  }
+  showSlide(STATE.currentSlide + 1);
+}
+
+function goPrev() {
+  if (STATE.currentSlide > 0) showSlide(STATE.currentSlide - 1);
+}
+
+function enableNext() {
+  document.getElementById('next-btn').disabled = false;
+  document.getElementById('skip-note').textContent = '';
+}
+
+// ══════════════════════════════════════════
+//  AUDIO PLAYER (MP3 → Web Speech fallback)
+// ══════════════════════════════════════════
+
+// Hidden <audio> element for MP3 playback
+const _audioEl = document.createElement('audio');
+_audioEl.style.display = 'none';
+document.body.appendChild(_audioEl);
+
+// Map slide index + context → audio key
+const SLIDE_AUDIO_KEYS = [
+  's01','s02','s03','s04','s05','s06','s07','s08','s09','s10',
+  's11','s12','s13','s14','s15','s16','s17','s18','s19'
+];
+
+function getAudioKey(slideIdx, phase) {
+  if (phase === 'remedial') {
+    const map = {3:'r04',6:'r07',10:'r11',12:'r13',14:'r15'};
+    return map[slideIdx] || SLIDE_AUDIO_KEYS[slideIdx];
+  }
+  return SLIDE_AUDIO_KEYS[slideIdx];
+}
+
+function playTTS(text, onEnd, audioKey) {
+  stopTTS();
+  const key = audioKey || null;
+
+  // Try MP3 first
+  if (key) {
+    const src = `audio/${key}.mp3`;
+    _audioEl.src = src;
+    _audioEl.oncanplaythrough = null;
+    _audioEl.onerror = () => { _audioEl.onerror = null; fallbackSpeech(text, onEnd); };
+    _audioEl.onended = () => {
+      STATE.ttsActive = false;
+      setTTSBtn(false);
+      if (onEnd) onEnd();
+    };
+    _audioEl.play().then(() => {
+      STATE.ttsActive = true;
+      setTTSBtn(true);
+    }).catch(() => fallbackSpeech(text, onEnd));
+    return;
+  }
+  fallbackSpeech(text, onEnd);
+}
+
+function fallbackSpeech(text, onEnd) {
+  if (!window.speechSynthesis || !text) { if (onEnd) onEnd(); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'vi-VN'; u.rate = 0.92; u.pitch = 1.05;
+  const viVoice = speechSynthesis.getVoices().find(v => v.lang.startsWith('vi'));
+  if (viVoice) u.voice = viVoice;
+  u.onstart = () => { STATE.ttsActive = true; setTTSBtn(true); };
+  u.onend = u.onerror = () => { STATE.ttsActive = false; setTTSBtn(false); if (onEnd) onEnd(); };
+  speechSynthesis.speak(u);
+}
+
+function stopTTS() {
+  _audioEl.pause();
+  _audioEl.src = '';
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  STATE.ttsActive = false;
+  setTTSBtn(false);
+}
+
+function setTTSBtn(playing) {
+  const btn = document.getElementById('tts-btn');
+  if (!btn) return;
+  btn.textContent = playing ? '⏹ Dừng' : '🔊 Nghe lại';
+  playing ? btn.classList.add('playing') : btn.classList.remove('playing');
+}
+
+function toggleTTS() {
+  if (STATE.ttsActive) { stopTTS(); return; }
+  const s = SLIDES[STATE.currentSlide];
+  const isRemedial = STATE.phase === 'remedial';
+  const text = isRemedial ? s.checkpoint?.remedial?.script : s.script;
+  const key  = getAudioKey(STATE.currentSlide, STATE.phase);
+  playTTS(text, null, key);
+}
+
+if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+// ══════════════════════════════════════════
+//  CHECKPOINT
+// ══════════════════════════════════════════
+function showCheckpoint(cp, isRemedial) {
+  const area = document.getElementById('checkpoint-area');
+  area.style.display = 'block';
+  area.className = isRemedial ? 'remedial' : '';
+  document.getElementById('cp-icon').textContent = isRemedial ? '🔄' : '❓';
+  document.getElementById('cp-title').textContent = isRemedial ? 'Thử lại nhé!' : 'Kiểm tra hiểu bài';
+  document.getElementById('cp-subtitle').textContent = isRemedial
+    ? 'Câu hỏi tương tự – em thử lại xem!' : 'Trả lời để tiếp tục bài học';
+
+  const q = isRemedial ? cp.remedial.question : cp.question;
+  const opts = isRemedial ? cp.remedial.options : cp.options;
+
+  document.getElementById('question-text').textContent = q;
+
+  // Build option buttons
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = o;
+    btn.onclick = () => selectOption(i, isRemedial);
+    container.appendChild(btn);
+  });
+
+  // Reset inputs
+  document.getElementById('text-input').value = '';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('continue-btn').style.display = 'none';
+  STATE.checkpointLocked = false;
+
+  // Play checkpoint question via TTS
+  const cpIdx = STATE.currentSlide;
+  const qKey = isRemedial ? `t${String(cpIdx+1).padStart(2,'0')}` : `q${String(cpIdx+1).padStart(2,'0')}`;
+  playTTS(q, null, qKey);
+}
+
+function hideCheckpoint() {
+  document.getElementById('checkpoint-area').style.display = 'none';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('continue-btn').style.display = 'none';
+  STATE.checkpointLocked = false;
+  STATE.attempts = 0;
+}
+
+function selectOption(idx, isRemedial) {
+  if (STATE.checkpointLocked) return;
+  STATE.checkpointLocked = true;
+  const s = SLIDES[STATE.currentSlide];
+  const cp = s.checkpoint;
+  const correct = isRemedial ? cp.remedial.correct : cp.correct;
+  const isCorrect = (idx === correct);
+
+  // Highlight buttons
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if (i === correct) b.classList.add('correct');
+    else if (i === idx && !isCorrect) b.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    handleCorrect(isRemedial ? '🎉 Đúng rồi! Tiếp tục nào!' : cp.explanation);
+  } else {
+    handleWrong(cp, isRemedial);
+  }
+}
+
+function handleCorrect(explanation) {
+  stopTTS();
+  const fb = document.getElementById('feedback');
+  fb.className = 'correct';
+  fb.textContent = explanation;
+  fb.style.display = 'block';
+  const eKey = isRemedial ? 'correct_generic' : `e${String(STATE.currentSlide+1).padStart(2,'0')}`;
+  playTTS(explanation, null, eKey);
+  document.getElementById('continue-btn').style.display = 'block';
+  enableNext();
+}
+
+function handleWrong(cp, isRemedial) {
+  STATE.attempts++;
+  stopTTS();
+  const fb = document.getElementById('feedback');
+  fb.className = 'wrong';
+
+  if (STATE.attempts >= 2 || isRemedial) {
+    // After 2 attempts OR failed retry: show answer and continue
+    fb.textContent = '💡 Đáp án đúng đã được đánh dấu. Hãy xem lại và tiếp tục nhé!';
+    fb.style.display = 'block';
+    playTTS('Không sao! Hãy xem đáp án đúng và tiếp tục nhé!', null, 'wrong_generic');
+    document.getElementById('continue-btn').style.display = 'block';
+    enableNext();
+  } else {
+    // First wrong: play remedial then show retry
+    fb.textContent = '❌ Chưa đúng! ' + (cp.remedial?.script || 'Hãy thử lại nhé!');
+    fb.style.display = 'block';
+    STATE.phase = 'remedial';
+    const rKey = `r${String(STATE.currentSlide+1).padStart(2,'0')}`;
+    playTTS(cp.remedial.script, () => {
+      setTimeout(() => showCheckpoint(cp, true), 500);
+    }, rKey);
+  }
+}
+
+function continueAfterCheckpoint() {
+  hideCheckpoint();
+  goNext();
+}
+
+// ══════════════════════════════════════════
+//  VOICE INPUT
+// ══════════════════════════════════════════
+function toggleVoice() {
+  if (STATE.recognizing) {
+    stopVoice();
+  } else {
+    startVoice();
+  }
+}
+
+function startVoice() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    alert('Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy dùng Chrome!');
+    return;
+  }
+  const rec = new SpeechRec();
+  rec.lang = 'vi-VN';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  STATE.recognition = rec;
+
+  rec.onstart = () => {
+    STATE.recognizing = true;
+    document.getElementById('voice-btn').textContent = '⏹ Đang nghe...';
+    document.getElementById('voice-btn').classList.add('recording');
+    document.getElementById('voice-status').textContent = '🎙️ Hãy nói câu trả lời...';
+  };
+
+  rec.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('voice-status').textContent = `"${transcript}"`;
+    document.getElementById('text-input').value = transcript;
+    submitTextAnswer();
+  };
+
+  rec.onerror = rec.onend = () => stopVoice();
+
+  rec.start();
+  stopTTS();
+}
+
+function stopVoice() {
+  STATE.recognizing = false;
+  if (STATE.recognition) { try { STATE.recognition.stop(); } catch(e){} }
+  document.getElementById('voice-btn').textContent = '🎤 Nói câu trả lời';
+  document.getElementById('voice-btn').classList.remove('recording');
+}
+
+// ══════════════════════════════════════════
+//  TEXT ANSWER (interpret via Claude or match)
+// ══════════════════════════════════════════
+async function submitTextAnswer() {
+  const text = document.getElementById('text-input').value.trim();
+  if (!text) return;
+  if (STATE.checkpointLocked) return;
+  stopVoice();
+
+  const s = SLIDES[STATE.currentSlide];
+  const cp = s.checkpoint;
+  const isRemedial = STATE.phase === 'remedial';
+  const opts = isRemedial ? cp.remedial.options : cp.options;
+
+  // Use Claude to find which option the student means
+  try {
+    document.getElementById('voice-status').textContent = '🤔 Đang phân tích...';
+    const idx = await interpretAnswer(text, opts);
+    document.getElementById('voice-status').textContent = '';
+    selectOption(idx, isRemedial);
+  } catch(e) {
+    document.getElementById('voice-status').textContent = 'Hãy click vào đáp án bên trên nhé!';
+  }
+}
+
+async function interpretAnswer(userText, options) {
+  const prompt = `Học sinh lớp 1 nói/gõ: "${userText}"
+Các lựa chọn (bỏ qua emoji, chỉ xét nghĩa):
+${options.map((o,i)=>`${i}: ${o}`).join('\n')}
+Trả lời CHỈ bằng số (0, 1, 2, hoặc 3) tương ứng với lựa chọn phù hợp nhất.`;
+
+  const res = await callClaude(prompt, 'Bạn là trợ lý phân tích câu trả lời học sinh. Chỉ trả về số, không thêm gì khác.');
+  const n = parseInt(res.trim());
+  return isNaN(n) ? 0 : Math.min(n, options.length - 1);
+}
+
+// ══════════════════════════════════════════
+//  CHATBOT
+// ══════════════════════════════════════════
+let chatOpen = false;
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chatbot').style.display = chatOpen ? 'flex' : 'none';
+  document.getElementById('chat-toggle').textContent = chatOpen ? '✕' : '💬';
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  appendChatMsg('user', msg);
+  const thinking = appendChatMsg('thinking', '🤔 Đang suy nghĩ...');
+
+  try {
+    const reply = await callClaude(msg, ASSISTANT_SYSTEM);
+    thinking.remove();
+    appendChatMsg('bot', reply);
+    playTTS(reply, null, null); // chatbot uses fallback speech
+  } catch(e) {
+    thinking.textContent = '❌ Lỗi kết nối. Kiểm tra API key nhé!';
+    thinking.className = 'msg bot';
+  }
+}
+
+function appendChatMsg(type, text) {
+  const div = document.createElement('div');
+  div.className = `msg ${type}`;
+  div.textContent = text;
+  const msgs = document.getElementById('chat-messages');
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+// ══════════════════════════════════════════
+//  GEMINI API
+// ══════════════════════════════════════════
+async function callClaude(userMsg, system) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${STATE.apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: system || ASSISTANT_SYSTEM }] },
+      contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+      generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err?.error?.message || 'API error ' + res.status);
+  }
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+</script>
+</body>
+</html>

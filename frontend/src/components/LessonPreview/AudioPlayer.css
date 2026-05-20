@@ -1,0 +1,31 @@
+.audio-player {
+  display: flex;
+  align-items: center;
+}
+
+.replay-btn {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 22px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #475569;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px; /* GATE-012 REQUIRED */
+  min-width: 44px;  /* GATE-012 REQUIRED */
+}
+
+.replay-btn:hover {
+  background-color: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.tts-indicator {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-left: 4px;
+}

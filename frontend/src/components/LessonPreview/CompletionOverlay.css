@@ -1,0 +1,57 @@
+.completion-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.completion-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+}
+
+.completion-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.completion-card h2 {
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.completion-card p {
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.restart-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-height: 44px; /* GATE-012 REQUIRED */
+  min-width: 120px; /* GATE-012 REQUIRED */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.restart-btn:hover {
+  background-color: #2563eb;
+}
