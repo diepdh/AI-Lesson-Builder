@@ -26,7 +26,15 @@ npm run dev
 ```
 *Server sẽ chạy tại: `http://localhost:3000`*
 
-### 2. Cấu hình Frontend
+### 2. Khởi tạo dữ liệu bài học từ ổ đĩa (Setup Screen)
+Tính năng mới cho phép dựng bài học tự động từ các thư mục (folder) chứa ảnh và âm thanh trên máy tính của bạn:
+- Sau khi khởi động Frontend (bước 3), nếu chưa có dữ liệu bài học, hệ thống sẽ hiển thị màn hình **Khởi tạo bài học**.
+- Bạn cần nhập đường dẫn tuyệt đối (Absolute Path) tới thư mục chứa ảnh (slides) và thư mục chứa âm thanh (audio).
+  - *Ví dụ Windows:* `C:\Users\Ten_Ban\Downloads\bai-giang\slides`
+  - *Ví dụ macOS:* `/Users/Ten_Ban/Downloads/bai-giang/slides`
+- Hệ thống sẽ tự động ghép cặp ảnh và âm thanh theo thứ tự chữ cái (alphabet) để tạo thành các trang slide. Bạn nên đặt tên file theo số thứ tự (ví dụ: `slide-01.jpg`, `slide-02.jpg`) để đảm bảo chính xác.
+
+### 3. Cấu hình Frontend
 Mở một cửa sổ dòng lệnh mới, di chuyển vào thư mục frontend và cài đặt:
 ```bash
 cd frontend
@@ -77,7 +85,7 @@ Hệ thống hỗ trợ hiển thị Hình ảnh, Video và Âm thanh cho mỗi 
 
 ## 📝 Nhật ký xây dựng
 Xem chi tiết các bước thực hiện và thay đổi tại: `BUILD_LOG.md`.
-## Tai lieu ban giao
+## Tài liệu bàn giao
 
-- `HANDOVER.md`: tai lieu ban giao ky thuat va van hanh.
-- `USER_GUIDE.md`: huong dan su dung cho giao vien/nguoi van hanh.
+- `HANDOVER.md`: tài liệu bàn giao kỹ thuật và vận hành.
+- `USER_GUIDE.md`: hướng dẫn sử dụng cho giáo viên/người vận hành.

@@ -56,6 +56,21 @@
   gap: 12px;
 }
 
+.header-action {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.header-action:hover {
+  background: rgba(255,255,255,0.16);
+}
+
 .status-dot {
   width: 10px;
   height: 10px;

@@ -1,27 +1,27 @@
 # HANDOVER.md
 
-## 1. Muc dich ban giao
+## 1. Mục đích bàn giao
 
-Du an **AI Lesson Builder (MVP)** la web app chay tren localhost de:
+Dự án **AI Lesson Builder (MVP)** là web app chạy trên localhost để:
 
-- Giao vien chinh sua bai giang bang AI o panel ben trai.
-- Xem truoc bai hoc e-learning o panel ben phai.
-- Chay bai hoc theo slide, audio, checkpoint, chat tro giang va voice.
-- Bao ve API key bang cach chi goi LLM tu backend.
+- Giáo viên chỉnh sửa bài giảng bằng AI ở panel bên trái.
+- Xem trước bài học e-learning ở panel bên phải.
+- Chạy bài học theo slide, audio, checkpoint, chat trợ giảng và voice.
+- Bảo vệ API key bằng cách chỉ gọi LLM từ backend.
 
-MVP nay khong phai LMS hoan chinh. Pham vi hien tai la 1 bai hoc, 1 lop hoc, 1 may chay localhost.
+MVP này không phải LMS hoàn chỉnh. Phạm vi hiện tại là 1 bài học, 1 lớp học, 1 máy chạy localhost.
 
-## 2. Thanh phan he thong
+## 2. Thành phần hệ thống
 
-| Thanh phan | Cong nghe | Vai tro |
+| Thành phần | Công nghệ | Vai trò |
 |---|---|---|
-| Backend | Node.js, Express | API doc/ghi lesson, goi LLM, validate, backup |
-| Frontend | React 18, Vite | Giao dien authoring + preview bai hoc |
-| Data | JSON file | Luu bai hoc tai `backend/data/lesson.json` |
-| Asset | Static files | Slide/audio/video tai `frontend/public/assets/` |
-| LLM | OpenAI/Gemini/Anthropic/mock | Cau hinh qua `backend/.env` |
+| Backend | Node.js, Express | API đọc/ghi lesson, gọi LLM, validate, backup |
+| Frontend | React 18, Vite | Giao diện authoring + preview bài học |
+| Data | JSON file | Lưu bài học tại `backend/data/lesson.json` |
+| Asset | Static files | Slide/audio/video tại `frontend/public/assets/` |
+| LLM | OpenAI/Gemini/Anthropic/mock | Cấu hình qua `backend/.env` |
 
-## 3. Cau truc thu muc quan trong
+## 3. Cấu trúc thư mục quan trọng
 
 ```text
 backend/
@@ -56,7 +56,7 @@ Task_job/
   REVIEW_REPORT.md
 ```
 
-## 4. Cach chay he thong
+## 4. Cách chạy hệ thống
 
 ### Backend
 
@@ -65,7 +65,7 @@ cd backend
 npm install
 ```
 
-Tao file `.env`:
+Tạo file `.env`:
 
 ```bash
 cp .env.example .env
@@ -77,13 +77,13 @@ Windows PowerShell:
 Copy-Item .env.example .env
 ```
 
-Chay backend:
+Chạy backend:
 
 ```bash
 npm run dev
 ```
 
-Backend chay tai:
+Backend chạy tại:
 
 ```text
 http://localhost:3000
@@ -103,15 +103,15 @@ npm install
 npm run dev
 ```
 
-Frontend chay tai:
+Frontend chạy tại:
 
 ```text
 http://localhost:5173
 ```
 
-## 5. Bien moi truong
+## 5. Biến môi trường
 
-File mau: `backend/.env.example`
+File mẫu: `backend/.env.example`
 
 ```text
 PORT=3000
@@ -126,53 +126,53 @@ TTS_RATE=0.9
 TTS_PITCH=1.1
 ```
 
-Ghi chu van hanh:
+Ghi chú vận hành:
 
-- Dung `LLM_PROVIDER=mock` de demo khong can API key.
-- Khi dung provider that, chi dien API key trong `backend/.env`.
-- Khong dua API key vao frontend hoac `lesson.json`.
-- Khong commit `backend/.env`.
+- Dùng `LLM_PROVIDER=mock` để demo không cần API key.
+- Khi dùng provider thật, chỉ điền API key trong `backend/.env`.
+- Không đưa API key vào frontend hoặc `lesson.json`.
+- Không commit `backend/.env`.
 
-## 6. API chinh
+## 6. API chính
 
-| API | Method | Chuc nang |
+| API | Method | Chức năng |
 |---|---|---|
-| `/api/health` | GET | Kiem tra backend song |
-| `/api/lesson` | GET | Load bai hoc |
-| `/api/lesson` | PUT | Ghi bai hoc sau validate + backup |
-| `/api/lesson/backups` | GET | Liet ke backup |
-| `/api/lesson/restore-last` | POST | Khoi phuc backup moi nhat |
-| `/api/ai/authoring` | POST | Chat AI de chinh sua bai hoc |
-| `/api/chat` | POST | Chat tro giang trong preview |
-| `/api/voice/chat` | POST | Gui transcript voice toi tro giang |
-| `/api/answer/evaluate` | POST | Cham cau tra loi checkpoint |
+| `/api/health` | GET | Kiểm tra backend sống |
+| `/api/lesson` | GET | Load bài học |
+| `/api/lesson` | PUT | Ghi bài học sau validate + backup |
+| `/api/lesson/backups` | GET | Liệt kê backup |
+| `/api/lesson/restore-last` | POST | Khôi phục backup mới nhất |
+| `/api/ai/authoring` | POST | Chat AI để chỉnh sửa bài học |
+| `/api/chat` | POST | Chat trợ giảng trong preview |
+| `/api/voice/chat` | POST | Gửi transcript voice tới trợ giảng |
+| `/api/answer/evaluate` | POST | Chấm câu trả lời checkpoint |
 | `/api/question/generate` | POST | Sinh checkpoint |
-| `/api/question/regenerate` | POST | Sinh lai checkpoint |
+| `/api/question/regenerate` | POST | Sinh lại checkpoint |
 
-## 7. Luong du lieu chinh
+## 7. Luồng dữ liệu chính
 
-1. Frontend goi `GET /api/lesson` de load `backend/data/lesson.json`.
-2. Panel trai gui prompt toi `POST /api/ai/authoring`.
-3. Backend goi LLM, parse JSON, validate lesson, tao backup, ghi lesson moi.
-4. Frontend nhan `updatedLesson` va cap nhat preview + tab JSON.
-5. Lesson player xu ly slide, audio, checkpoint, review flow.
-6. Classroom chat va voice goi backend qua `/api/chat` va `/api/voice/chat`.
+1. Frontend gọi `GET /api/lesson` để load `backend/data/lesson.json`.
+2. Panel trái gửi prompt tới `POST /api/ai/authoring`.
+3. Backend gọi LLM, parse JSON, validate lesson, tạo backup, ghi lesson mới.
+4. Frontend nhận `updatedLesson` và cập nhật preview + tab JSON.
+5. Lesson player xử lý slide, audio, checkpoint, review flow.
+6. Classroom chat và voice gọi backend qua `/api/chat` và `/api/voice/chat`.
 
-## 8. Quan ly noi dung bai hoc
+## 8. Quản lý nội dung bài học
 
-File bai hoc chinh:
+File bài học chính:
 
 ```text
 backend/data/lesson.json
 ```
 
-Khi sua bai hoc qua API, backend tao backup tai:
+Khi sửa bài học qua API, backend tạo backup tại:
 
 ```text
 backend/data/backups/
 ```
 
-Asset dung trong bai hoc nen dat tai:
+Asset dùng trong bài học nên đặt tại:
 
 ```text
 frontend/public/assets/slides/
@@ -180,7 +180,7 @@ frontend/public/assets/audio/
 frontend/public/assets/video/
 ```
 
-Duong dan trong `lesson.json` nen bat dau bang `/assets/`, vi du:
+Đường dẫn trong `lesson.json` nên bắt đầu bằng `/assets/`, ví dụ:
 
 ```json
 {
@@ -189,23 +189,23 @@ Duong dan trong `lesson.json` nen bat dau bang `/assets/`, vi du:
 }
 ```
 
-## 9. Checklist nghiem thu nhanh
+## 9. Checklist nghiệm thu nhanh
 
-1. `GET /api/health` tra `{ "ok": true }`.
-2. Mo `http://localhost:5173` thay layout 2 cot.
-3. Preview load duoc slide dau tien tu backend.
-4. Tab JSON hien thi lesson hien tai.
-5. Bam `Trang sau` chuyen slide duoc.
-6. Slide co checkpoint khoa nut Next.
-7. Tra loi sai chuyen ve slide on tap.
-8. Bam `Quay lai cau hoi` quay ve checkpoint.
-9. Tra loi dung mo khoa Next.
-10. Chat tro giang tra loi theo noi dung slide.
-11. Voice hoat dong tren Chrome hoac hien fallback ro.
-12. Authoring chat cap nhat preview hoac bao loi an toan.
-13. Khong co API key trong frontend source/network request.
+1. `GET /api/health` trả `{ "ok": true }`.
+2. Mở `http://localhost:5173` thấy layout 2 cột.
+3. Preview load được slide đầu tiên từ backend.
+4. Tab JSON hiển thị lesson hiện tại.
+5. Bấm `Trang sau` chuyển slide được.
+6. Slide có checkpoint khóa nút Next.
+7. Trả lời sai chuyển về slide ôn tập.
+8. Bấm `Quay lại câu hỏi` quay về checkpoint.
+9. Trả lời đúng mở khóa Next.
+10. Chat trợ giảng trả lời theo nội dung slide.
+11. Voice hoạt động trên Chrome hoặc hiện fallback rõ.
+12. Authoring chat cập nhật preview hoặc báo lỗi an toàn.
+13. Không có API key trong frontend source/network request.
 
-## 10. Lenh kiem tra ky thuat
+## 10. Lệnh kiểm tra kỹ thuật
 
 Backend syntax:
 
@@ -221,30 +221,29 @@ cd frontend
 npm run build
 ```
 
-Tim API key lo trong frontend:
+Tìm API key lộ trong frontend:
 
 ```bash
 rg -n "API_KEY|LLM_API_KEY|api.openai.com|generativelanguage|sk-|AIza" frontend/src frontend/public frontend/index.html frontend/vite.config.js
 ```
 
-## 11. Su co thuong gap
+## 11. Sự cố thường gặp
 
-| Van de | Cach xu ly |
+| Vấn đề | Cách xử lý |
 |---|---|
-| Frontend bao khong ket noi backend | Kiem tra backend da chay o port 3000 chua |
-| Port 3000 bi chiem | Tat process dang dung port hoac doi port co kiem soat |
-| AI bao loi 502 | Kiem tra `LLM_PROVIDER`, `LLM_API_KEY`, mang va timeout |
-| Voice khong chay | Dung Chrome, cap quyen microphone, hoac nhap bang ban phim |
-| Anh/audio khong hien | Kiem tra file co trong `frontend/public/assets/` va path bat dau `/assets/` |
-| Lesson bi loi sau chinh sua | Dung backup trong `backend/data/backups/` hoac endpoint restore |
+| Frontend báo không kết nối backend | Kiểm tra backend đã chạy ở port 3000 chưa |
+| Port 3000 bị chiếm | Tắt process đang dùng port hoặc đổi port có kiểm soát |
+| AI báo lỗi 502 | Kiểm tra `LLM_PROVIDER`, `LLM_API_KEY`, mạng và timeout |
+| Voice không chạy | Dùng Chrome, cấp quyền microphone, hoặc nhập bằng bàn phím |
+| Ảnh/audio không hiện | Kiểm tra file có trong `frontend/public/assets/` và path bắt đầu `/assets/` |
+| Lesson bị lỗi sau chỉnh sửa | Dùng backup trong `backend/data/backups/` hoặc endpoint restore |
 
-## 12. Trang thai ban giao
+## 12. Trạng thái bàn giao
 
-Theo `Task_job/REVIEW_REPORT.md`, cac job `JOB-001` den `JOB-013` da duoc reviewer kiem tra va pass sau cac vong sua. Tai lieu goc de truy vet:
+Theo `Task_job/REVIEW_REPORT.md`, các job `JOB-001` đến `JOB-013` đã được reviewer kiểm tra và pass sau các vòng sửa. Tài liệu gốc để truy vết:
 
 - `Task_job/TASKS.md`
 - `Task_job/BUILD_LOG.md`
 - `Task_job/REVIEW_REPORT.md`
 - `Task_job/CONTRACT.md`
 - `Task_job/BLUEPRINT.md`
-

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AppShell from './components/AppShell/AppShell';
 import LessonPlayer from './components/LessonPreview/LessonPlayer';
 import LeftChatPanel from './components/LeftChatPanel/LeftChatPanel';
+import SetupScreen from './components/SetupScreen/SetupScreen';
 import { lessonApi } from './api/lesson.api';
 import './styles.css';
 
@@ -15,6 +16,7 @@ function App() {
   ]);
   const [currentSlideId, setCurrentSlideId] = useState(null);
   const [error, setError] = useState(null);
+  const [showSetup, setShowSetup] = useState(false);
 
   const checkHealth = async () => {
     try {
@@ -42,6 +44,10 @@ function App() {
         if (data.lesson.slides?.length > 0) {
           setCurrentSlideId(data.lesson.slides[0].id);
         }
+      } else if (data.error === 'Lesson file not found') {
+        // Lesson not created yet, this is normal for first-time setup
+        setLesson(null);
+        setError(null);
       } else {
         setError("Không thể tải bài học. Vui lòng thử lại.");
       }
@@ -66,10 +72,45 @@ function App() {
 
   const handleLessonUpdate = (updatedLesson) => {
     setLesson(updatedLesson);
+    setShowSetup(false);
+    setActiveTab('preview');
+    if (updatedLesson?.slides?.length > 0) {
+      setCurrentSlideId(updatedLesson.slides[0].id);
+    }
   };
 
+  const handleCreateNewLesson = () => {
+    setError(null);
+    setShowSetup(true);
+  };
+
+  const handleDownloadLesson = () => {
+    if (!lesson) return;
+
+    const blob = new Blob([JSON.stringify(lesson, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${lesson.lessonId || 'lesson'}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  if (!loading && !error && (!lesson || showSetup)) {
+    return (
+      <AppShell health={health} onRetryHealth={checkHealth} onCreateNewLesson={lesson ? handleCreateNewLesson : null}>
+        <SetupScreen
+          onLessonInitialized={handleLessonUpdate}
+          onCancel={lesson ? () => setShowSetup(false) : null}
+        />
+      </AppShell>
+    );
+  }
+
   return (
-    <AppShell health={health} onRetryHealth={checkHealth}>
+    <AppShell health={health} onRetryHealth={checkHealth} onCreateNewLesson={handleCreateNewLesson}>
       <LeftChatPanel 
         messages={authoringMessages}
         setMessages={setAuthoringMessages}
@@ -91,6 +132,11 @@ function App() {
               onClick={() => setActiveTab('json')}
             >
               JSON
+            </button>
+          </div>
+          <div className="panel-actions">
+            <button className="secondary-action" onClick={handleDownloadLesson} disabled={!lesson}>
+              Tải JSON
             </button>
           </div>
         </div>

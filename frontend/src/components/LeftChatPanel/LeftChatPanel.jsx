@@ -27,7 +27,13 @@ const LeftChatPanel = ({ messages, setMessages, onLessonUpdate, currentSlideId }
     setIsProcessing(true);
 
     try {
-      const response = await authoringApi.chat(message, currentSlideId);
+      const chatHistory = [...messages, userMsg]
+        .slice(-10)
+        .map(msg => ({
+          role: msg.role,
+          content: msg.text
+        }));
+      const response = await authoringApi.chat(message, currentSlideId, chatHistory);
 
       if (response.ok) {
         const assistantMsg = { 
@@ -41,16 +47,18 @@ const LeftChatPanel = ({ messages, setMessages, onLessonUpdate, currentSlideId }
           onLessonUpdate(response.updatedLesson);
         }
       } else {
+        const detailText = response.details ? ` (${response.details})` : '';
         const errorMsg = response.status === 502 || response.error?.includes('LLM') 
           ? "AI đang gặp lỗi, vui lòng thử lại." 
           : 'Rất tiếc, em gặp lỗi khi xử lý yêu cầu: ' + (response.error || "Lỗi không xác định");
-        
+        const errorMsgWithDetails = errorMsg + detailText;
+
         setMessages(prev => [...prev, { 
           role: 'assistant', 
-          text: errorMsg,
+          text: errorMsgWithDetails,
           isError: true 
         }]);
-        setError(errorMsg);
+        setError(errorMsgWithDetails);
       }
     } catch (err) {
       console.error('Authoring chat failed:', err);

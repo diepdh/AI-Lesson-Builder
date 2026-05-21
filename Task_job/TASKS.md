@@ -322,6 +322,29 @@ Acceptance criteria:
   9. Voice hoạt động hoặc fallback rõ ràng.
   10. API key không xuất hiện trong frontend.
 
+## TASK-014: Khởi tạo bài học từ thư mục local (Setup Screen)
+
+Mục tiêu: Cho phép người dùng trỏ tới các thư mục local (ổ đĩa) chứa ảnh/audio để tự động dựng bài.
+
+Phạm vi:
+
+- **Backend**:
+  - Tạo `routes/media.routes.js` phục vụ endpoint `GET /api/media?path=...`. Endpoint này dùng `fs.existsSync` và `res.sendFile` để stream file lên frontend nhằm vượt qua giới hạn bảo mật local path của browser.
+  - Tạo endpoint `POST /api/lesson/init` nhận `{ slideFolder, audioFolder, videoFolder }`.
+  - Trong `lesson.service.js`, viết hàm quét thư mục `slideFolder` lấy ảnh, `audioFolder` lấy audio (sort theo alphabet). Ghép cặp chúng để tạo ra danh sách slides với `image` / `audio` mang giá trị trỏ về `/api/media?path=<absolute_path>`. Cập nhật và lưu `lesson.json` bằng cơ chế updateLesson hiện tại.
+- **Frontend**:
+  - Tạo `components/SetupScreen/SetupScreen.jsx`.
+  - Khi app mở lên, nếu `lesson === null`, render `<SetupScreen>` thay cho dòng báo lỗi "Dữ liệu bài học trống".
+  - SetupScreen chứa 3 input cho slide, audio, video. Đặt giá trị mặc định cho slide và audio trỏ về folder: `c:\Users\dohuy\Downloads\01. Documents\Xtech\bai-giang-ai3\bai-giang-ai\slides` và `...\audio`.
+  - Có nút "Dựng bài", bấm vào gọi API `init` và reload lại app.
+
+Acceptance criteria:
+
+- Truy cập app khi chưa có dữ liệu sẽ hiện form nhập.
+- Input đã được điền sẵn default path.
+- Nhấn dựng bài sẽ sinh ra bài giảng thành công dựa trên file trong máy.
+- Các ảnh và audio hiển thị được bình thường (nhờ API proxy `/api/media`).
+
 ## Thứ tự triển khai bắt buộc
 
 1. TASK-001.
@@ -337,6 +360,7 @@ Acceptance criteria:
 11. TASK-011.
 12. TASK-012.
 13. TASK-013.
+14. TASK-014.
 
 Không chuyển sang TASK frontend phụ thuộc API nếu backend API tương ứng chưa có mock hoặc implementation tối thiểu.
 

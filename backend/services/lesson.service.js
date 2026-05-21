@@ -19,6 +19,64 @@ class LessonService {
     }
   }
 
+  initializeFromLocalFolders({ slideFolder, audioFolder, videoFolder }) {
+    try {
+      const getFiles = (dir, extensions) => {
+        if (!dir || !fs.existsSync(dir)) return [];
+        return fs.readdirSync(dir)
+          .filter(file => extensions.includes(path.extname(file).toLowerCase()))
+          .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+          .map(file => path.join(dir, file));
+      };
+
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+      const audioExtensions = ['.mp3', '.wav', '.ogg', '.m4a'];
+      const videoExtensions = ['.mp4', '.webm', '.mov'];
+
+      const images = getFiles(slideFolder, imageExtensions);
+      const audios = getFiles(audioFolder, audioExtensions);
+      const videos = getFiles(videoFolder, videoExtensions);
+
+      if (images.length === 0) {
+        return { ok: false, error: 'No images found in slide folder' };
+      }
+
+      const slides = images.map((img, index) => {
+        const slideId = `slide-${(index + 1).toString().padStart(2, '0')}`;
+        const slide = {
+          id: slideId,
+          order: index + 1,
+          title: `Trang ${index + 1}`,
+          image: `/api/media?path=${encodeURIComponent(img)}`,
+          script: `Đây là nội dung trang thứ ${index + 1}.`,
+          knowledgePoint: "Kiến thức cơ bản"
+        };
+
+        if (audios[index]) {
+          slide.audio = `/api/media?path=${encodeURIComponent(audios[index])}`;
+        }
+
+        if (videos[index]) {
+          slide.video = `/api/media?path=${encodeURIComponent(videos[index])}`;
+        }
+
+        return slide;
+      });
+
+      const newLesson = {
+        lessonId: `lesson-${Date.now()}`,
+        title: "Bài học mới khởi tạo từ local",
+        description: `Bài học được dựng tự động từ thư mục ${slideFolder}`,
+        targetLearner: "Học sinh",
+        slides: slides
+      };
+
+      return this.updateLesson(newLesson);
+    } catch (error) {
+      return { ok: false, error: `Failed to initialize lesson: ${error.message}` };
+    }
+  }
+
   updateLesson(newLesson) {
     // 1. Validate
     const validation = validateLesson(newLesson);

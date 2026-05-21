@@ -395,6 +395,8 @@ Backend phải expose tối thiểu:
 | POST | `/api/question/generate` | Sinh checkpoint mới |
 | POST | `/api/question/regenerate` | Sinh câu hỏi tương tự khi retry |
 | GET | `/api/lesson/backups` | Liệt kê danh sách backup hiện có |
+| GET | `/api/media` | Phục vụ file ảnh/âm thanh từ đường dẫn local bất kỳ (proxy) |
+| POST | `/api/lesson/init` | Khởi tạo lesson mới bằng cách quét các thư mục local |
 
 Tất cả response nên có `ok: true/false`. Khi lỗi, trả `error` và `details` nếu có.
 

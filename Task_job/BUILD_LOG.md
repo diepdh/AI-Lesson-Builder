@@ -267,3 +267,20 @@ Bắt đầu: 2024-05-19
     3. Thực hiện sửa bài: Chat Authoring bên trái -> Bài giảng bên phải cập nhật.
     4. Tương tác AI: Chat lớp học bằng Voice/Text -> AI phản hồi và đọc âm thanh.
 - Ghi chú cuối cùng: Dự án đã sẵn sàng bàn giao bản MVP hoàn thiện nhất.
+
+---
+
+## JOB-014 Log
+- Trạng thái: DONE
+- File đã tạo: 
+    - `backend/routes/media.routes.js`
+    - `frontend/src/components/SetupScreen/SetupScreen.jsx`
+    - `frontend/src/components/SetupScreen/SetupScreen.css`
+- File đã sửa: 
+    - `backend/services/lesson.service.js`
+    - `backend/routes/lesson.routes.js`
+    - `backend/server.js`
+    - `frontend/src/api/lesson.api.js`
+    - `frontend/src/App.jsx`
+- Giả định đã đưa ra: Sử dụng absolute path cho tài nguyên local; sắp xếp alphabet (numeric) để ghép cặp ảnh và âm thanh.
+- Ghi chú cho Reviewer: Toàn bộ GATE-014 đã PASS. Hệ thống hiện có thể tự động dựng bài giảng từ tài nguyên có sẵn trên ổ đĩa.

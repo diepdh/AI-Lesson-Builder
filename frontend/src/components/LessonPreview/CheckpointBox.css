@@ -72,6 +72,8 @@
   border-radius: 8px;
   font-size: 15px;
   min-height: 44px; /* GATE-012 REQUIRED */
+  color: #1e293b; /* Cố định màu chữ để tránh lỗi Dark Mode OS */
+  background-color: white;
 }
 
 .submit-btn {

@@ -40,7 +40,8 @@ class LLMService {
     const response = await this.callLLM(params);
     const parsed = safeJsonParse(response);
     if (!parsed) {
-      throw new Error('LLM returned invalid JSON format');
+      const preview = typeof response === 'string' ? response.slice(0, 300) : String(response);
+      throw new Error(`LLM returned invalid JSON format. Response preview: ${preview || '[empty response]'}`);
     }
     return parsed;
   }
@@ -55,20 +56,37 @@ class LLMService {
 
   async _callOpenAI({ systemPrompt, userPrompt, temperature, maxTokens }) {
     const url = this.baseUrl || 'https://api.openai.com/v1/chat/completions';
-    const response = await axios.post(url, {
-      model: this.model || 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature,
-      max_tokens: maxTokens
-    }, {
-      headers: { 'Authorization': `Bearer ${this.apiKey}` },
-      timeout: this.timeout
-    });
+    try {
+      const response = await axios.post(url, {
+        model: this.model || 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature,
+        max_tokens: maxTokens
+      }, {
+        headers: { 'Authorization': `Bearer ${this.apiKey}` },
+        timeout: this.timeout
+      });
 
-    return response.data.choices[0].message.content;
+      const content = response.data?.choices?.[0]?.message?.content;
+      if (typeof content !== 'string') {
+        throw new Error(`OpenAI-compatible response missing choices[0].message.content: ${JSON.stringify(response.data).slice(0, 300)}`);
+      }
+
+      return content;
+    } catch (error) {
+      if (error.response) {
+        throw new Error(`LLM upstream error ${error.response.status}: ${JSON.stringify(error.response.data).slice(0, 300)}`);
+      }
+
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(`LLM upstream timeout after ${this.timeout}ms: ${url}`);
+      }
+
+      throw new Error(error.message || `LLM upstream request failed: ${url}`);
+    }
   }
 
   async _callGemini({ systemPrompt, userPrompt, temperature, maxTokens }) {

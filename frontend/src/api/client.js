@@ -20,11 +20,29 @@ export const client = async (endpoint, { body, ...customConfig } = {}) => {
 
   try {
     const response = await window.fetch(endpoint, config);
-    const data = await response.json();
+    const responseText = await response.text();
+    let data = {};
+
+    if (responseText) {
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        data = {
+          ok: false,
+          error: responseText || parseError.message
+        };
+      }
+    }
+
     if (response.ok) {
       return data;
     }
-    return { ok: false, error: data.error || response.statusText, status: response.status };
+    return {
+      ok: false,
+      error: data.error || response.statusText || 'Request failed',
+      details: data.details,
+      status: response.status
+    };
   } catch (err) {
     return { ok: false, error: err.message || 'Network error' };
   }

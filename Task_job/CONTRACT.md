@@ -28,6 +28,8 @@ Những deliverable sau sẽ được xây dựng trong MVP này. Mỗi item đ�
 | B-12 | `prompt-builder.js` — 5 hàm builder cho authoring, chat, evaluation, question gen | Module export đúng interface đã định nghĩa |
 | B-13 | `safe-json-parse.js` — strip markdown fence, parse an toàn | Input `\`\`\`json {...} \`\`\`` → trả object; input rác → trả `null` |
 | B-14 | `json-response.js` — wrapper chuẩn hóa response `{ok, data, error}` | Tất cả route dùng chung helper này |
+| B-15 | `media.routes.js` + `GET /api/media` | Truyền `?path=C:\...`, trả về nội dung file ảnh/audio/video đó hợp lệ |
+| B-16 | `POST /api/lesson/init` trong `lesson.routes.js` | Nhận path 3 thư mục, quét nội dung và tự tạo `lesson.json` mới hợp lệ |
 
 ### 1.2 Frontend React + Vite
 
@@ -48,6 +50,7 @@ Những deliverable sau sẽ được xây dựng trong MVP này. Mỗi item đ�
 | F-13 | `CompletionOverlay` — hiển thị khi hoàn thành bài học | Màn hình overlay xuất hiện sau slide cuối cùng |
 | F-14 | `api/` modules — `client.js`, `lesson.api.js`, `authoring.api.js`, `chat.api.js`, `answer.api.js`, `question.api.js` | Frontend không gọi fetch trực tiếp ngoài các module này |
 | F-15 | Banner cảnh báo khi backend không chạy; app không crash | Tắt backend → UI hiện thông báo, retry button hoạt động |
+| F-16 | `SetupScreen` component | Hiển thị form nhập 3 đường dẫn thư mục khi lesson rỗng, thay vì báo lỗi |
 
 ### 1.3 Tài liệu và dữ liệu mẫu
 

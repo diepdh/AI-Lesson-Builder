@@ -47,4 +47,19 @@ router.post('/restore-last', (req, res) => {
   }
 });
 
+// POST /api/lesson/init
+router.post('/init', (req, res) => {
+  const { slideFolder, audioFolder, videoFolder } = req.body;
+  if (!slideFolder) {
+    return res.status(400).json({ ok: false, error: 'Missing slideFolder' });
+  }
+
+  const result = lessonService.initializeFromLocalFolders({ slideFolder, audioFolder, videoFolder });
+  if (result.ok) {
+    res.json(result);
+  } else {
+    res.status(500).json(result);
+  }
+});
+
 module.exports = router;

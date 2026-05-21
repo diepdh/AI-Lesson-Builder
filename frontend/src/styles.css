@@ -34,6 +34,7 @@ body {
   padding: 0 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid #e2e8f0;
   background-color: #f8fafc;
   flex-shrink: 0;
@@ -101,6 +102,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  color: #1e293b; /* Cố định màu chữ để tránh lỗi Dark Mode OS */
 }
 
 .action-btn:hover {
@@ -126,6 +128,8 @@ body {
   font-family: inherit;
   font-size: 15px;
   outline: none;
+  color: #1e293b; /* Cố định màu chữ đậm để tránh lỗi chữ trắng ở chế độ Dark Mode của HĐH */
+  background-color: white;
 }
 
 .prompt-area textarea:focus {
@@ -188,12 +192,41 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #1e293b; /* Tránh chữ trắng */
 }
 
 .tab.active {
   background-color: #3b82f6;
   color: white;
   border-color: #2563eb;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.secondary-action {
+  min-height: 44px;
+  min-width: 100px;
+  padding: 8px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary-action:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.secondary-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Loading Spinner */

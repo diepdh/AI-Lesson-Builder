@@ -1,144 +1,194 @@
 {
-  "lessonId": "ai-la-gi-lop-1",
-  "title": "AI là gì? Làm quen với Trí tuệ nhân tạo",
-  "description": "Bài học giúp học sinh tiểu học hiểu khái niệm cơ bản về AI thông qua các ví dụ gần gũi.",
-  "targetLearner": "Học sinh lớp 1-3",
-  "learningObjectives": [
-    "Hiểu AI là do con người tạo ra",
-    "Nhận biết AI trong các đồ vật quen thuộc",
-    "Biết AI có thể tự học và hỗ trợ con người"
-  ],
-  "classroomMode": {
-    "mode": "teacher_led_shared_answer",
-    "teacherControlsSlides": true,
-    "sharedClassAnswer": true
-  },
-  "assistantPersona": {
-    "role": "Cô giáo AI thân thiện",
-    "tone": "Vui vẻ, động viên, sử dụng ngôn ngữ đơn giản",
-    "scopeRule": "Chỉ trả lời về chủ đề AI và bài học hiện tại"
-  },
+  "lessonId": "lesson-1779263045180",
+  "title": "Bài học mới khởi tạo từ local",
+  "description": "Bài học được dựng tự động từ thư mục C:\\Users\\dohuy\\Downloads\\01. Documents\\Xtech\\bai-giang-ai3\\bai-giang-ai\\slides",
+  "targetLearner": "Học sinh",
   "slides": [
     {
       "id": "slide-01",
       "order": 1,
-      "title": "Chào mừng các em!",
-      "module": "Giới thiệu",
-      "image": "/assets/slides/slide-01.jpg",
-      "audio": "/assets/audio/s01.mp3",
-      "video": null,
-      "script": "Chào các em! Hôm nay chúng ta sẽ cùng khám phá một thế giới cực kỳ thú vị, đó là thế giới của Trí tuệ nhân tạo, hay còn gọi là AI đấy!",
-      "knowledgePoint": "Khởi động và làm quen",
-      "checkpoint": null
+      "title": "Trang 1",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-01.jpg",
+      "script": "Chào em!",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Ccorrect_generic.mp3",
+      "checkpoint": {
+        "id": "cp-slide-01-001",
+        "type": "multiple_choice",
+        "question": "Khi gặp thầy cô hoặc bạn bè, em nên nói gì để chào hỏi?",
+        "options": [
+          "Chào em!",
+          "Tạm biệt!",
+          "Xin lỗi!",
+          "Cảm ơn!"
+        ],
+        "correctAnswer": "Chào em!",
+        "explanation": "Câu “Chào em!” là lời chào dùng khi gặp nhau để bắt đầu nói chuyện một cách lịch sự.",
+        "wrongFeedback": "Chưa đúng. “Tạm biệt” dùng khi rời đi, “Xin lỗi” dùng khi có lỗi, “Cảm ơn” dùng khi nhận được giúp đỡ. Lời chào phù hợp là “Chào em!”.",
+        "reviewSlideId": "slide-01"
+      }
     },
     {
       "id": "slide-02",
       "order": 2,
-      "title": "AI là gì nhỉ?",
-      "module": "Khái niệm",
-      "image": "/assets/slides/slide-02.jpg",
-      "audio": "/assets/audio/s02.mp3",
-      "video": null,
-      "script": "Các em có bao giờ tự hỏi làm sao chú robot hút bụi lại biết tự đi quanh nhà mà không đâm vào bàn ghế không? Đó là nhờ AI đấy!",
-      "knowledgePoint": "AI là bộ não thông minh của máy móc",
-      "checkpoint": null
+      "title": "Trang 2",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-02.jpg",
+      "script": "Đây là nội dung trang thứ 2.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Ce04.mp3"
     },
     {
       "id": "slide-03",
       "order": 3,
-      "title": "Ví dụ về Robot hút bụi",
-      "module": "Ví dụ",
-      "image": "/assets/slides/slide-03.jpg",
-      "audio": "/assets/audio/s03.mp3",
-      "video": null,
-      "script": "Hãy xem chú robot này nhé. Nó có 'mắt' để nhìn và 'não' để quyết định đi hướng nào.",
-      "knowledgePoint": "Robot hút bụi sử dụng cảm biến và thuật toán AI",
-      "checkpoint": null
+      "title": "Trang 3",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-03.jpg",
+      "script": "Đây là nội dung trang thứ 3.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Ce07.mp3"
     },
     {
       "id": "slide-04",
       "order": 4,
-      "title": "Kiểm tra một chút nào!",
-      "module": "Luyện tập",
-      "image": "/assets/slides/slide-04.jpg",
-      "audio": "/assets/audio/s04.mp3",
-      "video": null,
-      "script": "Bây giờ cô có một câu hỏi cho cả lớp mình nhé.",
-      "knowledgePoint": "Ôn tập về AI trong đời sống",
-      "checkpoint": {
-        "id": "cp-04-mock",
-        "type": "multiple_choice",
-        "question": "Mock: Đây có phải AI không?",
-        "options": [
-          "Có",
-          "Không"
-        ],
-        "correctAnswer": "Có",
-        "explanation": "Đúng!",
-        "wrongFeedback": "Sai rồi!",
-        "reviewSlideId": "slide-03"
-      }
+      "title": "Trang 4",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-04.jpg",
+      "script": "Đây là nội dung trang thứ 4.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Ce11.mp3"
     },
     {
       "id": "slide-05",
       "order": 5,
-      "title": "AI học như thế nào?",
-      "module": "Cách thức",
-      "image": "/assets/slides/slide-05.jpg",
-      "audio": "/assets/audio/s05.mp3",
-      "video": null,
-      "script": "AI giống như các em vậy, nó cũng cần được học từ rất nhiều hình ảnh và thông tin để trở nên thông minh hơn.",
-      "knowledgePoint": "Khái niệm Machine Learning cơ bản",
-      "checkpoint": null
+      "title": "Trang 5",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-05.jpg",
+      "script": "Đây là nội dung trang thứ 5.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Ce13.mp3"
     },
     {
       "id": "slide-06",
       "order": 6,
-      "title": "AI giúp chúng ta dịch thuật",
-      "module": "Ví dụ",
-      "image": "/assets/slides/slide-06.jpg",
-      "audio": "/assets/audio/s06.mp3",
-      "video": null,
-      "script": "Các em có thấy khi mình nói tiếng Việt, máy tính có thể dịch sang tiếng Anh không? Đó cũng là một bạn AI rất giỏi ngôn ngữ đấy.",
-      "knowledgePoint": "Ứng dụng AI trong ngôn ngữ",
-      "checkpoint": null
+      "title": "Trang 6",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-06.jpg",
+      "script": "Đây là nội dung trang thứ 6.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Ce15.mp3"
     },
     {
       "id": "slide-07",
       "order": 7,
-      "title": "AI và Con người",
-      "module": "So sánh",
-      "image": "/assets/slides/slide-07.jpg",
-      "audio": "/assets/audio/s07.mp3",
-      "video": null,
-      "script": "Dù AI rất giỏi nhưng nó vẫn là do con người chúng ta tạo ra để giúp cuộc sống tốt đẹp hơn.",
-      "knowledgePoint": "Mối quan hệ giữa AI và con người",
-      "checkpoint": null
+      "title": "Trang 7",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-07.jpg",
+      "script": "Đây là nội dung trang thứ 7.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cq04.mp3"
     },
     {
       "id": "slide-08",
       "order": 8,
-      "title": "Câu hỏi cuối bài",
-      "module": "Tổng kết",
-      "image": "/assets/slides/slide-08.jpg",
-      "audio": "/assets/audio/s08.mp3",
-      "video": null,
-      "script": "Trước khi kết thúc, cô muốn biết các em đã nhớ AI là gì chưa nào?",
-      "knowledgePoint": "Tổng kết kiến thức toàn bài",
-      "checkpoint": {
-        "id": "cp-08",
-        "type": "short_text",
-        "question": "AI là do ai tạo ra?",
-        "options": null,
-        "correctAnswer": "Con người",
-        "explanation": "Chính xác! Con người đã tạo ra AI để hỗ trợ chúng ta.",
-        "wrongFeedback": "Gợi ý: Không phải tự nhiên mà có AI đâu, ai đã tạo ra máy tính nhỉ?",
-        "reviewSlideId": "slide-07",
-        "retryPolicy": {
-          "askSimilarQuestion": true,
-          "maxAttemptsBeforeHint": 1
-        }
-      }
+      "title": "Trang 8",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-08.jpg",
+      "script": "Đây là nội dung trang thứ 8.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cq07.mp3"
+    },
+    {
+      "id": "slide-09",
+      "order": 9,
+      "title": "Trang 9",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-09.jpg",
+      "script": "Đây là nội dung trang thứ 9.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cq11.mp3"
+    },
+    {
+      "id": "slide-10",
+      "order": 10,
+      "title": "Trang 10",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-10.jpg",
+      "script": "Đây là nội dung trang thứ 10.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cq13.mp3"
+    },
+    {
+      "id": "slide-11",
+      "order": 11,
+      "title": "Trang 11",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-11.jpg",
+      "script": "Đây là nội dung trang thứ 11.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cq15.mp3"
+    },
+    {
+      "id": "slide-12",
+      "order": 12,
+      "title": "Trang 12",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-12.jpg",
+      "script": "Đây là nội dung trang thứ 12.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cr04.mp3"
+    },
+    {
+      "id": "slide-13",
+      "order": 13,
+      "title": "Trang 13",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-13.jpg",
+      "script": "Đây là nội dung trang thứ 13.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cr07.mp3"
+    },
+    {
+      "id": "slide-14",
+      "order": 14,
+      "title": "Trang 14",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-14.jpg",
+      "script": "Đây là nội dung trang thứ 14.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cr11.mp3"
+    },
+    {
+      "id": "slide-15",
+      "order": 15,
+      "title": "Trang 15",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-15.jpg",
+      "script": "Đây là nội dung trang thứ 15.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cr13.mp3"
+    },
+    {
+      "id": "slide-16",
+      "order": 16,
+      "title": "Trang 16",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-16.jpg",
+      "script": "Đây là nội dung trang thứ 16.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cr15.mp3"
+    },
+    {
+      "id": "slide-17",
+      "order": 17,
+      "title": "Trang 17",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-17.jpg",
+      "script": "Đây là nội dung trang thứ 17.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cs01.mp3"
+    },
+    {
+      "id": "slide-18",
+      "order": 18,
+      "title": "Trang 18",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-18.jpg",
+      "script": "Đây là nội dung trang thứ 18.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cs02.mp3"
+    },
+    {
+      "id": "slide-19",
+      "order": 19,
+      "title": "Trang 19",
+      "image": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Cslides%5Cslide-19.jpg",
+      "script": "Đây là nội dung trang thứ 19.",
+      "knowledgePoint": "Kiến thức cơ bản",
+      "audio": "/api/media?path=C%3A%5CUsers%5Cdohuy%5CDownloads%5C01.%20Documents%5CXtech%5Cbai-giang-ai3%5Cbai-giang-ai%5Caudio%5Cs03.mp3"
     }
   ]
 }

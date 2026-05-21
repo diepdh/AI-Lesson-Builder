@@ -1,12 +1,12 @@
 # USER_GUIDE.md
 
-## 1. Doi tuong su dung
+## 1. Đối tượng sử dụng
 
-Tai lieu nay danh cho giao vien hoac nguoi van hanh muon dung **AI Lesson Builder** de mo bai giang, chinh sua bang AI, chay slide, kiem tra checkpoint va dung tro giang AI trong lop.
+Tài liệu này dành cho giáo viên hoặc người vận hành muốn dùng **AI Lesson Builder** để mở bài giảng, chỉnh sửa bằng AI, chạy slide, kiểm tra checkpoint và dùng trợ giảng AI trong lớp.
 
-## 2. Mo ung dung
+## 2. Mở ứng dụng
 
-Truoc khi dung, can co 2 cua so terminal dang chay:
+Trước khi dùng, cần có 2 cửa sổ terminal đang chạy:
 
 Backend:
 
@@ -22,156 +22,156 @@ cd frontend
 npm run dev
 ```
 
-Sau do mo trinh duyet:
+Sau đó mở trình duyệt:
 
 ```text
 http://localhost:5173
 ```
 
-Neu dung voice, nen dung Google Chrome.
+Nếu dùng voice, nên dùng Google Chrome.
 
-## 3. Giao dien chinh
+## 3. Giao diện chính
 
-Ung dung co 2 vung chinh:
+Ứng dụng có 2 vùng chính:
 
-| Vung | Chuc nang |
+| Vùng | Chức năng |
 |---|---|
-| Panel trai: Authoring AI | Chat voi AI de chinh sua bai giang |
-| Panel phai: Preview | Xem va chay bai hoc nhu hoc sinh se thay |
+| Panel trái: Authoring AI | Chat với AI để chỉnh sửa bài giảng |
+| Panel phải: Preview | Xem và chạy bài học như học sinh sẽ thấy |
 
-O panel phai co 2 tab:
+Ở panel phải có 2 tab:
 
-- `Preview`: chay bai hoc.
-- `JSON`: xem du lieu bai hoc hien tai.
+- `Preview`: chạy bài học.
+- `JSON`: xem dữ liệu bài học hiện tại.
 
-## 4. Chay bai hoc
+## 4. Chạy bài học
 
-1. Mo app tai `http://localhost:5173`.
-2. Doi bai hoc load xong.
-3. Xem slide hien tai o panel phai.
-4. Bam `Trang sau` de chuyen slide.
-5. Bam `Trang truoc` de quay lai slide truoc neu can.
-6. Neu slide co audio, app se co phat audio.
-7. Neu audio loi hoac thieu file, app co the dung giong doc may theo noi dung script.
+1. Mở app tại `http://localhost:5173`.
+2. Đợi bài học load xong.
+3. Xem slide hiện tại ở panel phải.
+4. Bấm `Trang sau` để chuyển slide.
+5. Bấm `Trang trước` để quay lại slide trước nếu cần.
+6. Nếu slide có audio, app sẽ cố phát audio.
+7. Nếu audio lỗi hoặc thiếu file, app có thể dùng giọng đọc máy theo nội dung script.
 
-## 5. Lam checkpoint
+## 5. Làm checkpoint
 
-Khi toi slide co checkpoint, cau hoi se tu hien.
+Khi tới slide có checkpoint, câu hỏi sẽ tự hiện.
 
-Voi cau hoi trac nghiem:
+Với câu hỏi trắc nghiệm:
 
-1. Chon mot dap an.
-2. App gui dap an de AI/backend danh gia.
-3. Neu dung, bam tiep tuc va nut `Trang sau` duoc mo.
-4. Neu sai, app huong dan quay ve slide on tap.
+1. Chọn một đáp án.
+2. App gửi đáp án để AI/backend đánh giá.
+3. Nếu đúng, bấm tiếp tục và nút `Trang sau` được mở.
+4. Nếu sai, app hướng dẫn quay về slide ôn tập.
 
-Voi cau hoi nhap ngan:
+Với câu hỏi nhập ngắn:
 
-1. Nhap cau tra loi cua lop.
-2. Bam `Gui cau tra loi`.
-3. Xem phan hoi va lam theo huong dan.
+1. Nhập câu trả lời của lớp.
+2. Bấm `Gửi câu trả lời`.
+3. Xem phản hồi và làm theo hướng dẫn.
 
-## 6. On tap sau khi tra loi sai
+## 6. Ôn tập sau khi trả lời sai
 
-Neu lop tra loi sai:
+Nếu lớp trả lời sai:
 
-1. App chuyen ve slide on tap phu hop.
-2. Doc lai noi dung hoac nghe lai audio.
-3. Bam `Quay lai cau hoi`.
-4. Tra loi lai checkpoint.
-5. Khi tra loi dung, tiep tuc bai hoc.
+1. App chuyển về slide ôn tập phù hợp.
+2. Đọc lại nội dung hoặc nghe lại audio.
+3. Bấm `Quay lại câu hỏi`.
+4. Trả lời lại checkpoint.
+5. Khi trả lời đúng, tiếp tục bài học.
 
-## 7. Dung tro giang AI trong bai hoc
+## 7. Dùng trợ giảng AI trong bài học
 
-Trong phan Preview, bam nut mo chat tro giang.
+Trong phần Preview, bấm nút mở chat trợ giảng.
 
-Cach dung:
+Cách dùng:
 
-1. Nhap cau hoi lien quan bai hoc, vi du: `AI la gi?`.
-2. Bam gui.
-3. AI tra loi theo ngu canh slide hien tai.
-4. Neu response co cau hinh doc, app se doc cau tra loi bang TTS.
+1. Nhập câu hỏi liên quan bài học, ví dụ: `AI là gì?`.
+2. Bấm gửi.
+3. AI trả lời theo ngữ cảnh slide hiện tại.
+4. Nếu response có cấu hình đọc, app sẽ đọc câu trả lời bằng TTS.
 
-Luu y:
+Lưu ý:
 
-- Chat tro giang dung cho hoc sinh/lop hoc.
-- Chat nay tach biet voi Authoring AI o panel trai.
+- Chat trợ giảng dùng cho học sinh/lớp học.
+- Chat này tách biệt với Authoring AI ở panel trái.
 
-## 8. Dung voice
+## 8. Dùng voice
 
-Voice dung Web Speech API cua trinh duyet.
+Voice dùng Web Speech API của trình duyệt.
 
-Tren Chrome:
+Trên Chrome:
 
-1. Bam `Noi voi co`.
-2. Cho phep quyen microphone.
-3. Noi cau hoi bang tieng Viet.
-4. App gui transcript toi tro giang AI.
-5. AI tra loi bang text va co the doc len.
+1. Bấm `Nói với cô`.
+2. Cho phép quyền microphone.
+3. Nói câu hỏi bằng tiếng Việt.
+4. App gửi transcript tới trợ giảng AI.
+5. AI trả lời bằng text và có thể đọc lên.
 
-Tren trinh duyet khong ho tro:
+Trên trình duyệt không hỗ trợ:
 
-- App se hien fallback.
-- Hay nhap cau hoi bang ban phim.
+- App sẽ hiện fallback.
+- Hãy nhập câu hỏi bằng bàn phím.
 
-## 9. Chinh sua bai giang bang AI
+## 9. Chỉnh sửa bài giảng bằng AI
 
-Panel trai la Authoring AI. Dung vung nay de yeu cau AI chinh bai.
+Panel trái là Authoring AI. Dùng vùng này để yêu cầu AI chỉnh bài.
 
-Cach gui prompt:
+Cách gửi prompt:
 
-1. Nhap yeu cau vao o chat.
-2. Bam `Gui`.
-3. Doi AI xu ly.
-4. Xem phan hoi va phan tom tat thay doi.
-5. Neu co `updatedLesson`, preview ben phai cap nhat ngay.
+1. Nhập yêu cầu vào ô chat.
+2. Bấm `Gửi`.
+3. Đợi AI xử lý.
+4. Xem phản hồi và phần tóm tắt thay đổi.
+5. Nếu có `updatedLesson`, preview bên phải cập nhật ngay.
 
-Vi du prompt:
+Ví dụ prompt:
 
 ```text
-Hay viet lai loi thoai slide hien tai cho hoc sinh lop 3 de hieu hon.
+Hãy viết lại lời thoại slide hiện tại cho học sinh lớp 3 dễ hiểu hơn.
 ```
 
 ```text
-Hay them mot checkpoint trac nghiem cho slide nay.
+Hãy thêm một checkpoint trắc nghiệm cho slide này.
 ```
 
 ```text
-Hay lam noi dung slide nay sinh dong hon nhung van ngan gon.
+Hãy làm nội dung slide này sinh động hơn nhưng vẫn ngắn gọn.
 ```
 
-## 10. Dung quick actions
+## 10. Dùng quick actions
 
-Panel trai co cac nut thao tac nhanh nhu:
+Panel trái có các nút thao tác nhanh như:
 
-- `Them checkpoint`
-- `Sua loi thoai`
-- `Tao cau hoi`
-- `Cai thien noi dung`
+- `Thêm checkpoint`
+- `Sửa lời thoại`
+- `Tạo câu hỏi`
+- `Cải thiện nội dung`
 
-Khi bam quick action:
+Khi bấm quick action:
 
-1. App dien prompt mau vao o nhap.
-2. Ban co the sua lai noi dung prompt.
-3. Bam `Gui` de thuc su gui cho AI.
+1. App điền prompt mẫu vào ô nhập.
+2. Bạn có thể sửa lại nội dung prompt.
+3. Bấm `Gửi` để thực sự gửi cho AI.
 
-Quick action khong tu gui ngay.
+Quick action không tự gửi ngay.
 
-## 11. Xem du lieu JSON
+## 11. Xem dữ liệu JSON
 
-Tab `JSON` o panel phai dung de kiem tra du lieu bai hoc hien tai.
+Tab `JSON` ở panel phải dùng để kiểm tra dữ liệu bài học hiện tại.
 
-Dung tab nay khi:
+Dùng tab này khi:
 
-- Muon xem slide/checkpoint da duoc AI cap nhat chua.
-- Muon kiem tra duong dan anh/audio/video.
-- Muon debug khi preview hien thi chua dung.
+- Muốn xem slide/checkpoint đã được AI cập nhật chưa.
+- Muốn kiểm tra đường dẫn ảnh/audio/video.
+- Muốn debug khi preview hiển thị chưa đúng.
 
-Khong nen chinh truc tiep JSON trong giao dien vi tab nay chi de xem.
+Không nên chỉnh trực tiếp JSON trong giao diện vì tab này chỉ để xem.
 
-## 12. Them anh, audio, video
+## 12. Thêm ảnh, audio, video
 
-Dat file vao cac thu muc:
+Đặt file vào các thư mục:
 
 ```text
 frontend/public/assets/slides/
@@ -179,7 +179,7 @@ frontend/public/assets/audio/
 frontend/public/assets/video/
 ```
 
-Sau do cap nhat duong dan trong `backend/data/lesson.json`, vi du:
+Sau đó cập nhật đường dẫn trong `backend/data/lesson.json`, ví dụ:
 
 ```json
 {
@@ -189,33 +189,32 @@ Sau do cap nhat duong dan trong `backend/data/lesson.json`, vi du:
 }
 ```
 
-Luu y:
+Lưu ý:
 
-- Khong dung duong dan tuyet doi tren may.
-- Nen dung duong dan bat dau bang `/assets/`.
-- Neu anh loi, app hien thi placeholder.
-- Neu audio loi, app fallback sang TTS neu co script.
+- Không dùng đường dẫn tuyệt đối trên máy.
+- Nên dùng đường dẫn bắt đầu bằng `/assets/`.
+- Nếu ảnh lỗi, app hiển thị placeholder.
+- Nếu audio lỗi, app fallback sang TTS nếu có script.
 
-## 13. Khi gap loi
+## 13. Khi gặp lỗi
 
-| Loi | Cach xu ly |
+| Lỗi | Cách xử lý |
 |---|---|
-| Khong ket noi backend | Kiem tra terminal backend con chay khong |
-| Backend loi sau khi AI chinh bai | Kiem tra `backend/data/backups/` va restore ban gan nhat |
-| AI khong phan hoi | Kiem tra `.env`, provider, API key hoac dung `LLM_PROVIDER=mock` |
-| Voice khong nhan | Dung Chrome va cap quyen microphone |
-| Slide khong hien anh | Kiem tra file asset va path trong `lesson.json` |
-| Nut Next bi khoa | Hoan thanh checkpoint dung truoc |
+| Không kết nối backend | Kiểm tra terminal backend còn chạy không |
+| Backend lỗi sau khi AI chỉnh bài | Kiểm tra `backend/data/backups/` và restore bản gần nhất |
+| AI không phản hồi | Kiểm tra `.env`, provider, API key hoặc dùng `LLM_PROVIDER=mock` |
+| Voice không nhận | Dùng Chrome và cấp quyền microphone |
+| Slide không hiện ảnh | Kiểm tra file asset và path trong `lesson.json` |
+| Nút Next bị khóa | Hoàn thành checkpoint đúng trước |
 
-## 14. Quy trinh demo de xuat
+## 14. Quy trình demo đề xuất
 
-1. Mo app va gioi thieu layout 2 cot.
-2. Chay vai slide dau.
-3. Toi checkpoint, tra loi sai de demo review flow.
-4. Quay lai checkpoint, tra loi dung de mo khoa Next.
-5. Mo chat tro giang va hoi mot cau theo noi dung slide.
-6. Demo voice neu dung Chrome.
-7. Chuyen sang panel trai, dung quick action `Sua loi thoai`.
-8. Gui prompt, cho AI phan hoi.
-9. Xem Preview va tab JSON cap nhat.
-
+1. Mở app và giới thiệu layout 2 cột.
+2. Chạy vài slide đầu.
+3. Tới checkpoint, trả lời sai để demo review flow.
+4. Quay lại checkpoint, trả lời đúng để mở khóa Next.
+5. Mở chat trợ giảng và hỏi một câu theo nội dung slide.
+6. Demo voice nếu dùng Chrome.
+7. Chuyển sang panel trái, dùng quick action `Sửa lời thoại`.
+8. Gửi prompt, chờ AI phản hồi.
+9. Xem Preview và tab JSON cập nhật.
