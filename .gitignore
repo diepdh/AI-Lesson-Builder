@@ -24,3 +24,6 @@ Thumbs.db
 
 # Project specific backups
 backend/data/backups/
+backend/data/*.bak
+exports/
+*.code-workspace

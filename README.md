@@ -83,7 +83,48 @@ Hệ thống hỗ trợ hiển thị Hình ảnh, Video và Âm thanh cho mỗi 
 
 ---
 
-## 📝 Nhật ký xây dựng
+## � Xuất webapp mới
+
+Sau khi hoàn thành xây dựng và kiểm thử, bạn có thể xuất một webapp đầy đủ để triển khai hoặc chạy trên máy khác.
+
+1.  Từ thư mục gốc `Xtech`, chạy script export bằng PowerShell:
+
+```powershell
+.\scripts\export-webapp.ps1
+```
+
+2.  Nếu bạn đã xây dựng frontend trước đó, có thể bỏ qua bước build bằng cách thêm `-NoBuild`:
+
+```powershell
+.\scripts\export-webapp.ps1
+```
+
+3.  Script sẽ tạo thư mục `exports/ai-lesson-webapp-YYYYMMDDHHmmss` và file nén cùng tên `exports/ai-lesson-webapp-YYYYMMDDHHmmss.zip`.
+
+4.  Gói xuất gồm:
+   - `backend/`: mã nguồn backend, `package.json`, `server.js`, `routes`, `services`, `utils`.
+   - `backend/public/`: nội dung production của frontend được copy từ `frontend/dist`.
+   - `backend/data/lesson.json`: dữ liệu bài học hiện tại.
+   - `backend/data/media/`: media slide/audio/video cần thiết cho bản portable.
+   - `.env.example` đã được copy ra `backend/.env` để bạn dễ cấu hình.
+
+5.  Để chạy webapp xuất ra trên máy khác:
+
+```powershell
+cd exports\ai-lesson-webapp-YYYYMMDDHHmmss\backend
+npm install
+npm start
+```
+
+6.  Mở trình duyệt đến:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## �📝 Nhật ký xây dựng
 Xem chi tiết các bước thực hiện và thay đổi tại: `BUILD_LOG.md`.
 ## Tài liệu bàn giao
 

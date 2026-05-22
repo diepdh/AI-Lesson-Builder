@@ -30,6 +30,7 @@ const voiceRoutes = require('./routes/voice.routes');
 const answerRoutes = require('./routes/answer.routes');
 const questionRoutes = require('./routes/question.routes');
 const mediaRoutes = require('./routes/media.routes');
+const exportRoutes = require('./routes/export.routes');
 
 app.use('/api/lesson', lessonRoutes);
 app.use('/api/ai/authoring', authoringRoutes);
@@ -38,6 +39,7 @@ app.use('/api/voice/chat', voiceRoutes);
 app.use('/api/answer', answerRoutes);
 app.use('/api/question', questionRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api', exportRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

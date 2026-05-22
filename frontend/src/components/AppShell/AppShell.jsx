@@ -1,7 +1,7 @@
 import React from 'react';
 import './AppShell.css'; // Sẽ tạo sau
 
-const AppShell = ({ children, health, onRetryHealth, onCreateNewLesson }) => {
+const AppShell = ({ children, health, onRetryHealth, onCreateNewLesson, onExport }) => {
   return (
     <div className="app-shell">
       {!health?.ok && (
@@ -16,6 +16,11 @@ const AppShell = ({ children, health, onRetryHealth, onCreateNewLesson }) => {
           {onCreateNewLesson && (
             <button className="header-action" onClick={onCreateNewLesson}>
               Tạo bài mới
+            </button>
+          )}
+          {onExport && (
+            <button className="header-action" onClick={onExport}>
+              Xuất webapp
             </button>
           )}
           <span className={`status-dot ${health?.ok ? 'online' : 'offline'}`}></span>

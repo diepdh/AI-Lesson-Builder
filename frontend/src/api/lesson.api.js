@@ -7,4 +7,5 @@ export const lessonApi = {
   restoreLast: () => client.post('/api/lesson/restore-last'),
   getHealth: () => client.get('/api/health'),
   initLesson: (folders) => client.post('/api/lesson/init', folders),
+  exportWebapp: () => client.post('/api/export'),
 };

@@ -79,6 +79,20 @@ function App() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const res = await lessonApi.exportWebapp();
+      if (res.ok) {
+        const msg = res.zip ? `Export thành công: ${res.zip}` : 'Export thành công.';
+        alert(msg);
+      } else {
+        alert('Export thất bại: ' + (res.error || JSON.stringify(res)));
+      }
+    } catch (err) {
+      alert('Lỗi khi gọi export: ' + err.message);
+    }
+  };
+
   const handleCreateNewLesson = () => {
     setError(null);
     setShowSetup(true);
@@ -110,7 +124,7 @@ function App() {
   }
 
   return (
-    <AppShell health={health} onRetryHealth={checkHealth} onCreateNewLesson={handleCreateNewLesson}>
+    <AppShell health={health} onRetryHealth={checkHealth} onCreateNewLesson={handleCreateNewLesson} onExport={handleExport}>
       <LeftChatPanel 
         messages={authoringMessages}
         setMessages={setAuthoringMessages}

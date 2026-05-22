@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bài giảng</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #eef2f7; color: #172033; }
+    .topbar { height: 56px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; background: #172033; color: #fff; }
+    .topbar h1 { margin: 0; font-size: 18px; }
+    .counter { font-weight: 700; font-size: 14px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 18px; }
+    .progress { height: 10px; background: #dbe3ee; border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
+    .progress span { display: block; height: 100%; width: 0; background: #10b981; }
+    .stage { background: #000; border-radius: 8px; overflow: hidden; min-height: 360px; display: flex; align-items: center; justify-content: center; }
+    .stage img, .stage video { max-width: 100%; max-height: 68vh; object-fit: contain; display: block; }
+    .script { margin-top: 14px; padding: 14px 16px; border-left: 4px solid #f59e0b; background: #fff8df; color: #8a3d00; border-radius: 4px; line-height: 1.5; }
+    .checkpoint { margin-top: 14px; padding: 18px; border: 2px solid #93c5fd; background: #eff6ff; border-radius: 10px; }
+    .checkpoint h2 { margin: 0 0 12px; font-size: 20px; color: #1e3a8a; }
+    .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .option { min-height: 48px; padding: 10px 12px; border: 1px solid #bfdbfe; border-radius: 8px; background: #fff; cursor: pointer; color: #0f3f8c; font-size: 15px; }
+    .option.correct { border-color: #16a34a; background: #dcfce7; color: #166534; }
+    .option.wrong { border-color: #dc2626; background: #fee2e2; color: #991b1b; }
+    .feedback { margin-top: 12px; font-weight: 600; line-height: 1.5; }
+    .controls { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 8px; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
+    button.secondary { background: #fff; color: #1e293b; border: 1px solid #cbd5e1; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    audio { width: min(420px, 100%); }
+    .chat-toggle { position: fixed; right: 20px; bottom: 20px; box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+    .chat-panel { position: fixed; right: 20px; bottom: 76px; width: min(390px, calc(100vw - 32px)); max-height: min(620px, calc(100vh - 100px)); background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; box-shadow: 0 12px 36px rgba(15,23,42,.2); display: none; overflow: hidden; }
+    .chat-panel.open { display: flex; flex-direction: column; }
+    .chat-head { height: 46px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; background: #172033; color: #fff; font-weight: 700; }
+    .chat-log { padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow: auto; min-height: 220px; }
+    .bubble { max-width: 86%; padding: 10px 12px; border-radius: 10px; line-height: 1.45; font-size: 14px; }
+    .bubble.user { align-self: flex-end; background: #2563eb; color: #fff; }
+    .bubble.assistant { align-self: flex-start; background: #f1f5f9; color: #172033; border: 1px solid #e2e8f0; }
+    .chat-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #e2e8f0; }
+    .chat-input textarea { flex: 1; min-height: 48px; max-height: 120px; resize: vertical; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    .chat-input button { padding: 0 12px; }
+    .voice-on { background: #dc2626; }
+    .empty { padding: 40px; text-align: center; color: #64748b; }
+    @media (max-width: 760px) {
+      main { padding: 12px; }
+      .stage { min-height: 240px; }
+      .options { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1 id="lessonTitle">Bài giảng</h1>
+    <div class="counter" id="counter"></div>
+  </div>
+  <main>
+    <div class="progress"><span id="progressBar"></span></div>
+    <section class="stage" id="stage"></section>
+    <div class="script" id="script"></div>
+    <section class="checkpoint" id="checkpoint" hidden></section>
+    <div class="controls">
+      <button class="secondary" id="prevBtn">Trang trước</button>
+      <button class="secondary" id="replayBtn">Phát lại lời giảng</button>
+      <button id="nextBtn">Trang sau</button>
+      <audio id="audio" controls hidden></audio>
+    </div>
+  </main>
+
+  <button class="chat-toggle" id="chatToggle">Hỏi cô giáo trợ giảng</button>
+  <aside class="chat-panel" id="chatPanel">
+    <div class="chat-head">
+      <span>Cô giáo trợ giảng</span>
+      <button class="secondary" id="chatClose">Đóng</button>
+    </div>
+    <div class="chat-log" id="chatLog"></div>
+    <div class="chat-input">
+      <textarea id="chatText" placeholder="Nhập câu hỏi..."></textarea>
+      <button id="voiceBtn" title="Nói với cô">Mic</button>
+      <button id="sendBtn">Gửi</button>
+    </div>
+  </aside>
+
+  <script>
+    const state = { lesson: null, index: 0, chatHistory: [], hasUserInteracted: false, recognition: null };
+    const el = {
+      title: document.getElementById('lessonTitle'),
+      counter: document.getElementById('counter'),
+      progress: document.getElementById('progressBar'),
+      stage: document.getElementById('stage'),
+      script: document.getElementById('script'),
+      checkpoint: document.getElementById('checkpoint'),
+      prev: document.getElementById('prevBtn'),
+      next: document.getElementById('nextBtn'),
+      replay: document.getElementById('replayBtn'),
+      audio: document.getElementById('audio'),
+      chatToggle: document.getElementById('chatToggle'),
+      chatPanel: document.getElementById('chatPanel'),
+      chatClose: document.getElementById('chatClose'),
+      chatLog: document.getElementById('chatLog'),
+      chatText: document.getElementById('chatText'),
+      send: document.getElementById('sendBtn'),
+      voice: document.getElementById('voiceBtn')
+    };
+
+    async function loadLesson() {
+      const res = await fetch('/api/lesson');
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Không tải được bài giảng');
+      state.lesson = data.lesson;
+      render(false);
+    }
+
+    function currentSlide() {
+      return state.lesson.slides[state.index];
+    }
+
+    function render(autoplay = true) {
+      const lesson = state.lesson;
+      if (!lesson || !lesson.slides?.length) {
+        el.stage.innerHTML = '<div class="empty">Chưa có dữ liệu bài giảng.</div>';
+        return;
+      }
+      const slide = currentSlide();
+      el.title.textContent = lesson.title || 'Bài giảng';
+      el.counter.textContent = `Trang ${state.index + 1} / ${lesson.slides.length}`;
+      el.progress.style.width = `${((state.index + 1) / lesson.slides.length) * 100}%`;
+      el.script.textContent = slide.script || '';
+
+      if (slide.video) {
+        el.stage.innerHTML = `<video src="${slide.video}" controls></video>`;
+      } else if (slide.image) {
+        el.stage.innerHTML = `<img src="${slide.image}" alt="${slide.title || ''}" />`;
+      } else {
+        el.stage.innerHTML = '<div class="empty">Slide này chưa có hình ảnh.</div>';
+      }
+
+      if (slide.audio) {
+        el.audio.src = slide.audio;
+        el.audio.hidden = false;
+        if (autoplay || state.hasUserInteracted) {
+          setTimeout(() => el.audio.play().catch(() => {}), 80);
+        }
+      } else {
+        el.audio.removeAttribute('src');
+        el.audio.hidden = true;
+      }
+
+      renderCheckpoint(slide.checkpoint);
+      el.prev.disabled = state.index === 0;
+      el.next.disabled = state.index >= lesson.slides.length - 1;
+    }
+
+    function renderCheckpoint(cp) {
+      el.checkpoint.hidden = !cp;
+      el.checkpoint.innerHTML = '';
+      if (!cp) return;
+
+      const title = document.createElement('h2');
+      title.textContent = cp.question || 'Câu hỏi';
+      el.checkpoint.appendChild(title);
+
+      const options = document.createElement('div');
+      options.className = 'options';
+      (cp.options || []).forEach(optionText => {
+        const btn = document.createElement('button');
+        btn.className = 'option';
+        btn.textContent = optionText;
+        btn.onclick = () => answer(btn, optionText, cp);
+        options.appendChild(btn);
+      });
+      el.checkpoint.appendChild(options);
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback';
+      el.checkpoint.appendChild(feedback);
+    }
+
+    function answer(button, optionText, cp) {
+      const feedback = el.checkpoint.querySelector('.feedback');
+      const isCorrect = optionText === cp.correctAnswer;
+      button.classList.add(isCorrect ? 'correct' : 'wrong');
+      feedback.textContent = isCorrect ? (cp.explanation || 'Đúng rồi!') : (cp.wrongFeedback || 'Chưa chính xác, hãy xem lại bài.');
+    }
+
+    function addChat(role, text) {
+      const item = document.createElement('div');
+      item.className = `bubble ${role}`;
+      item.textContent = text;
+      el.chatLog.appendChild(item);
+      el.chatLog.scrollTop = el.chatLog.scrollHeight;
+      state.chatHistory.push({ role, content: text });
+      state.chatHistory = state.chatHistory.slice(-10);
+    }
+
+    async function sendChat(text, isVoice = false) {
+      const message = (text || el.chatText.value).trim();
+      if (!message) return;
+      el.chatText.value = '';
+      addChat('user', message);
+      addChat('assistant', 'Đang trả lời...');
+      const loadingBubble = el.chatLog.lastChild;
+
+      try {
+        const endpoint = isVoice ? '/api/voice/chat' : '/api/chat';
+        const body = isVoice
+          ? { lessonId: state.lesson.lessonId, currentSlideId: currentSlide().id, transcript: message, mode: 'classroom' }
+          : { lessonId: state.lesson.lessonId, currentSlideId: currentSlide().id, message, chatHistory: state.chatHistory, mode: 'classroom' };
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        const reply = data.ok ? (data.reply || data.message || 'Cô chưa có câu trả lời phù hợp.') : (data.error || 'AI đang gặp lỗi.');
+        loadingBubble.textContent = reply;
+        state.chatHistory[state.chatHistory.length - 1] = { role: 'assistant', content: reply };
+        speak(reply);
+      } catch (error) {
+        loadingBubble.textContent = 'Không kết nối được trợ giảng AI.';
+      }
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'vi-VN';
+      utterance.rate = 0.95;
+      utterance.pitch = 1.12;
+      const voices = window.speechSynthesis.getVoices();
+      const vietnameseVoices = voices.filter(voice => voice.lang && voice.lang.toLowerCase().startsWith('vi'));
+      const femaleVoice = vietnameseVoices.find(voice => /female|woman|girl|linh|mai|an|hoai|thao|trang|ha|ngoc/i.test(voice.name));
+      utterance.voice = femaleVoice || vietnameseVoices[0] || null;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function setupVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        el.voice.disabled = true;
+        el.voice.title = 'Trình duyệt không hỗ trợ nhận giọng nói';
+        return;
+      }
+      state.recognition = new SpeechRecognition();
+      state.recognition.lang = 'vi-VN';
+      state.recognition.interimResults = false;
+      state.recognition.onresult = event => {
+        const transcript = event.results[0][0].transcript;
+        el.voice.classList.remove('voice-on');
+        sendChat(transcript, true);
+      };
+      state.recognition.onend = () => el.voice.classList.remove('voice-on');
+      el.voice.onclick = () => {
+        el.voice.classList.add('voice-on');
+        state.recognition.start();
+      };
+    }
+
+    el.prev.onclick = () => { state.hasUserInteracted = true; if (state.index > 0) { state.index--; render(true); } };
+    el.next.onclick = () => { state.hasUserInteracted = true; if (state.index < state.lesson.slides.length - 1) { state.index++; render(true); } };
+    el.replay.onclick = () => { state.hasUserInteracted = true; if (!el.audio.hidden) { el.audio.currentTime = 0; el.audio.play().catch(() => {}); } };
+    el.chatToggle.onclick = () => el.chatPanel.classList.add('open');
+    el.chatClose.onclick = () => el.chatPanel.classList.remove('open');
+    el.send.onclick = () => sendChat();
+    el.chatText.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendChat();
+      }
+    });
+
+    setupVoice();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+      window.speechSynthesis.getVoices();
+    }
+    loadLesson().catch(err => {
+      el.stage.innerHTML = `<div class="empty">${err.message}</div>`;
+    });
+  </script>
+</body>
+</html>
