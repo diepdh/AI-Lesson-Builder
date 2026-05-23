@@ -62,4 +62,15 @@ router.post('/init', (req, res) => {
   }
 });
 
+// POST /api/lesson/enrich
+router.post('/enrich', async (req, res) => {
+  const { targetLearner, learningObjectives, scope } = req.body || {};
+  const result = await lessonService.enrichLesson({ targetLearner, learningObjectives, scope });
+  if (result.ok) {
+    res.json(result);
+  } else {
+    res.status(500).json(result);
+  }
+});
+
 module.exports = router;

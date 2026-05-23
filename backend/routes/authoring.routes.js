@@ -5,13 +5,13 @@ const jsonResponse = require('../utils/json-response');
 
 // POST /api/ai/authoring
 router.post('/', async (req, res) => {
-  const { message, currentSlideId, chatHistory } = req.body;
+  const { message, currentSlideId, chatHistory, intent } = req.body;
 
   if (!message) {
     return jsonResponse.badRequest(res, 'Missing message in request body');
   }
 
-  const result = await authoringService.processAuthoringChat(message, currentSlideId, chatHistory);
+  const result = await authoringService.processAuthoringChat(message, currentSlideId, chatHistory, intent);
 
   if (result.ok) {
     return jsonResponse.success(res, result, 'Authoring successful');

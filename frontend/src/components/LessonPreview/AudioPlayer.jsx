@@ -1,27 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './AudioPlayer.css';
 
-const AudioPlayer = ({ src, script }) => {
+const AudioPlayer = ({ src, script, forceTTS = false }) => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(false);
-
-  useEffect(() => {
-    setAudioError(false);
-    if (audioRef.current) {
-      audioRef.current.load();
-      audioRef.current.play().catch(err => {
-        console.warn('Audio auto-play blocked or failed:', err);
-        setIsPlaying(false);
-      });
-    }
-  }, [src]);
-
-  const handleAudioError = () => {
-    console.warn('Audio file failed to load, falling back to TTS');
-    setAudioError(true);
-    handleTTS();
-  };
 
   const handleTTS = () => {
     if (!script || !window.speechSynthesis) return;
@@ -39,8 +22,29 @@ const AudioPlayer = ({ src, script }) => {
     }
   };
 
+  useEffect(() => {
+    setAudioError(false);
+    if (forceTTS) {
+      handleTTS();
+      return;
+    }
+    if (audioRef.current) {
+      audioRef.current.load();
+      audioRef.current.play().catch((err) => {
+        console.warn('Audio auto-play blocked or failed:', err);
+        setIsPlaying(false);
+      });
+    }
+  }, [src, forceTTS]);
+
+  const handleAudioError = () => {
+    console.warn('Audio file failed to load, falling back to TTS');
+    setAudioError(true);
+    handleTTS();
+  };
+
   const handleReplay = () => {
-    if (audioError) {
+    if (forceTTS || audioError) {
       handleTTS();
     } else if (audioRef.current) {
       audioRef.current.currentTime = 0;
@@ -48,7 +52,6 @@ const AudioPlayer = ({ src, script }) => {
     }
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (window.speechSynthesis) {
@@ -63,17 +66,18 @@ const AudioPlayer = ({ src, script }) => {
 
   return (
     <div className="audio-player">
-      <audio 
-        ref={audioRef} 
-        src={src} 
+      <audio
+        ref={audioRef}
+        src={src}
+        style={{ display: forceTTS ? 'none' : 'block' }}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
         onError={handleAudioError}
       />
-      <button className="replay-btn" onClick={handleReplay} title="Phát lại lời giảng">
-        {isPlaying ? '🔊 Đang phát...' : '▶️ Phát lại lời giảng'}
-        {audioError && <span className="tts-indicator">(TTS)</span>}
+      <button className="replay-btn" onClick={handleReplay} title="Phat lai loi giang">
+        {isPlaying ? 'Dang phat...' : 'Phat lai loi giang'}
+        {(audioError || forceTTS) && <span className="tts-indicator">(TTS)</span>}
       </button>
     </div>
   );

@@ -3,91 +3,158 @@
  */
 
 const promptBuilder = {
-  // 1. Authoring Prompts (JOB-004)
+  // 1. Authoring Prompts
   buildAuthoringSystemPrompt: () => {
-    return `Bạn là trợ lý AI chuyên giúp giáo viên tạo bài giảng e-learning.
-Nhiệm vụ của bạn là hiểu yêu cầu người dùng và cập nhật lesson JSON.
+    return `Ban la tro ly AI chuyen giup giao vien tao bai giang e-learning.
+Nhiem vu cua ban la hieu yeu cau nguoi dung va cap nhat lesson JSON.
 
-Quy tắc BẮT BUỘC:
-- Trả về JSON hợp lệ, KHÔNG giải thích thêm ngoài JSON.
-- Cấu trúc JSON trả về phải bao gồm: 
+Quy tac BAT BUOC:
+- Tra ve JSON hop le, KHONG giai thich them ngoai JSON.
+- Cau truc JSON tra ve phai bao gom:
   {
-    "assistantMessage": "Lời nhắn của bạn tới giáo viên",
-    "changeSummary": "Tóm tắt các thay đổi đã thực hiện",
-    "patch": [], 
-    "updatedLesson": { ... toàn bộ lesson đã cập nhật ... }
+    "assistantMessage": "Loi nhan toi giao vien",
+    "changeSummary": "Tom tat thay doi da thuc hien",
+    "patch": [],
+    "updatedLesson": { ...toan bo lesson da cap nhat... }
   }
-- Không phá cấu trúc lesson JSON cũ.
-- Không xóa slide hoặc dữ liệu cũ nếu người dùng không yêu cầu.
-- Nếu thêm checkpoint, phải có: id, type, question, options (nếu mc), correctAnswer, explanation, wrongFeedback, reviewSlideId.
-- reviewSlideId phải trỏ tới một id slide đã tồn tại trong bài học.
-- Nội dung phải phù hợp với đối tượng học sinh (targetLearner).`;
+- Khong pha cau truc lesson JSON cu.
+- Khong xoa slide hoac du lieu cu neu giao vien khong yeu cau.
+- Neu them checkpoint, phai co: id, type, question, options, correctAnswer, explanation, wrongFeedback, reviewSlideId.
+- reviewSlideId phai tro toi mot id slide da ton tai trong bai hoc.
+- Noi dung phai phu hop voi targetLearner.
+- Cac field image/audio/video khong duoc thay doi neu giao vien khong yeu cau ro.`;
   },
 
-  buildAuthoringUserPrompt: (message, currentLesson, currentSlideId) => {
-    return `Yêu cầu của giáo viên: "${message}"
-Slide hiện tại: ${currentSlideId || 'N/A'}
+  buildAuthoringIntentGuide: (intent) => {
+    const guides = {
+      add_checkpoint_current_slide: [
+        '- Chi tao checkpoint cho slide hien tai.',
+        '- Cau hoi bam sat knowledgePoint va script.',
+        '- Neu la trac nghiem thi options toi thieu 3 phuong an, 1 dap an dung.'
+      ],
+      rewrite_script_current_slide: [
+        '- Chi viet lai script slide hien tai.',
+        '- Giu dung y chinh cua slide, cau ngan gon, de hieu.',
+        '- Khong thay image/audio/video.'
+      ],
+      add_open_question_current_slide: [
+        '- Them 1 cau hoi tu luan ngan cho slide hien tai.',
+        '- Cau hoi phai do duoc muc hieu bai.'
+      ],
+      improve_content_current_slide: [
+        '- Chi cai thien noi dung slide hien tai.',
+        '- Khong can thiep media va khong sua slide khac.'
+      ]
+    };
+    return guides[intent]?.join('\n') || '';
+  },
 
-Dữ liệu bài học hiện tại (JSON):
+  buildAuthoringUserPrompt: (message, currentLesson, currentSlideId, intent) => {
+    const slides = Array.isArray(currentLesson?.slides) ? currentLesson.slides : [];
+    const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
+    const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+    const currentSlide = slides[safeIndex] || null;
+    const prevSlide = safeIndex > 0 ? slides[safeIndex - 1] : null;
+    const nextSlide = safeIndex < slides.length - 1 ? slides[safeIndex + 1] : null;
+
+    const compactSlide = (slide) => {
+      if (!slide) return null;
+      return {
+        id: slide.id,
+        order: slide.order,
+        title: slide.title,
+        script: slide.script,
+        knowledgePoint: slide.knowledgePoint,
+        checkpoint: slide.checkpoint || null
+      };
+    };
+
+    const intentGuide = promptBuilder.buildAuthoringIntentGuide(intent);
+
+    return `Yeu cau cua giao vien: "${message}"
+Intent: ${intent || 'general_edit'}
+Slide hien tai: ${currentSlideId || 'N/A'}
+${intentGuide ? `Huong dan theo intent:
+${intentGuide}
+` : ''}
+
+Metadata bai hoc:
+${JSON.stringify({
+  lessonId: currentLesson.lessonId,
+  title: currentLesson.title,
+  description: currentLesson.description,
+  targetLearner: currentLesson.targetLearner,
+  learningObjectives: currentLesson.learningObjectives || []
+}, null, 2)}
+
+Ngu canh slide:
+${JSON.stringify({
+  previousSlide: compactSlide(prevSlide),
+  currentSlide: compactSlide(currentSlide),
+  nextSlide: compactSlide(nextSlide)
+}, null, 2)}
+
+Du lieu bai hoc hien tai (JSON):
 ${JSON.stringify(currentLesson, null, 2)}`;
   },
 
-  // 2. Classroom Chat Prompts (JOB-005)
+  // 2. Classroom Chat Prompts
   buildChatSystemPrompt: (lesson, currentSlide) => {
-    return `Bạn là cô giáo AI thân thiện đang hỗ trợ cả lớp học.
-Hãy trả lời ngắn gọn, dễ hiểu (phù hợp với ${lesson.targetLearner}).
-Chỉ trả lời trong phạm vi bài học hiện tại.
-Nếu câu hỏi ngoài phạm vi bài học, hãy nhẹ nhàng kéo cả lớp quay lại bài học.
+    return `Ban la co giao AI than thien dang ho tro ca lop hoc.
+Hay tra loi ngan gon, de hieu (phu hop voi ${lesson.targetLearner}).
+Chi tra loi trong pham vi bai hoc hien tai.
+Neu cau hoi ngoai pham vi bai hoc, hay nhe nhang keo ca lop quay lai bai hoc.
 
-Ngữ cảnh bài học:
-- Tên bài: ${lesson.title}
-- Đối tượng: ${lesson.targetLearner}
-- Slide hiện tại: ${currentSlide.title}
-- Kiến thức chính ở slide này: ${currentSlide.knowledgePoint}
+Ngu canh bai hoc:
+- Ten bai: ${lesson.title}
+- Doi tuong: ${lesson.targetLearner}
+- Slide hien tai: ${currentSlide.title}
+- Kien thuc chinh o slide nay: ${currentSlide.knowledgePoint}
 
-Quy tắc trả về JSON:
+Quy tac tra ve JSON:
 {
-  "reply": "Nội dung trả lời",
-  "scope": "in_lesson" hoặc "redirected",
+  "reply": "Noi dung tra loi",
+  "scope": "in_lesson" hoac "redirected",
   "speak": true
 }`;
   },
 
-  // 3. Evaluation Prompts (JOB-006)
+  // 3. Evaluation Prompts
   buildEvaluationPrompt: (question, correctAnswer, classAnswer, knowledgePoint) => {
-    return `Bạn là hệ thống đánh giá câu trả lời của một lớp học.
-Hãy đánh giá mềm theo ý nghĩa, không yêu cầu đúng từng chữ.
+    return `Ban la he thong danh gia cau tra loi cua mot lop hoc.
+Hay danh gia mem theo y nghia, khong yeu cau dung tung chu.
 
-Thông tin:
-- Câu hỏi: ${question}
-- Đáp án đúng: ${correctAnswer}
-- Câu trả lời của lớp: ${classAnswer}
-- Kiến thức slide: ${knowledgePoint}
+Thong tin:
+- Cau hoi: ${question}
+- Dap an dung: ${correctAnswer}
+- Cau tra loi cua lop: ${classAnswer}
+- Kien thuc slide: ${knowledgePoint}
 
-Chỉ trả JSON hợp lệ:
+Chi tra JSON hop le:
 {
   "isCorrect": true/false,
-  "feedback": "Phản hồi ngắn gọn, thân thiện cho cả lớp",
+  "feedback": "Phan hoi ngan gon, than thien cho ca lop",
   "shouldReview": true/false,
-  "reviewSlideId": "ID slide để ôn tập nếu sai, hoặc null",
-  "nextAction": "continue" hoặc "review"
+  "reviewSlideId": "ID slide de on tap neu sai, hoac null",
+  "nextAction": "continue" hoac "review"
 }`;
   },
 
-  // 4. Question Generation Prompts (JOB-006)
+  // 4. Question Generation Prompts
   buildQuestionGenerationPrompt: (lesson, slide, type) => {
-    return `Bạn là chuyên gia thiết kế câu hỏi e-learning.
-Hãy tạo một câu hỏi checkpoint cho slide này.
+    return `Ban la chuyen gia thiet ke cau hoi e-learning.
+Hay tao mot cau hoi checkpoint cho slide nay.
 
-Thông tin slide:
-- Tiêu đề: ${slide.title}
-- Kiến thức chính: ${slide.knowledgePoint}
-- Nội dung giảng: ${slide.script}
+Thong tin slide:
+- Tieu de: ${slide.title}
+- Kien thuc chinh: ${slide.knowledgePoint}
+- Noi dung giang: ${slide.script}
+- Doi tuong hoc: ${lesson.targetLearner}
 
-Yêu cầu:
-- Loại câu hỏi: ${type || 'multiple_choice'}
-- Trả về JSON hợp lệ cho field "checkpoint" trong schema.
-- Phải có: id, type, question, options (nếu mc), correctAnswer, explanation, wrongFeedback, reviewSlideId (chính là slide hiện tại: ${slide.id}).`;
+Yeu cau:
+- Loai cau hoi: ${type || 'multiple_choice'}
+- Tra ve JSON hop le cho field "checkpoint" trong schema.
+- Phai co: id, type, question, options (neu mc), correctAnswer, explanation, wrongFeedback, reviewSlideId (chinh la slide hien tai: ${slide.id}).`;
   }
 };
 

@@ -60,12 +60,14 @@
   background-color: #eff6ff;
 }
 
-.short-text-area {
+.class-answer-area {
   display: flex;
   gap: 10px;
+  align-items: stretch;
+  margin-top: 12px;
 }
 
-.short-text-area input {
+.class-answer-area input {
   flex: 1;
   padding: 12px;
   border: 2px solid #e0f2fe;
@@ -74,6 +76,14 @@
   min-height: 44px; /* GATE-012 REQUIRED */
   color: #1e293b; /* Cố định màu chữ để tránh lỗi Dark Mode OS */
   background-color: white;
+}
+
+.answer-divider {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 12px;
+  text-align: center;
 }
 
 .submit-btn {
@@ -165,4 +175,14 @@
 
 .action-btn:hover {
   opacity: 0.9;
+}
+
+@media (max-width: 760px) {
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .class-answer-area {
+    flex-direction: column;
+  }
 }

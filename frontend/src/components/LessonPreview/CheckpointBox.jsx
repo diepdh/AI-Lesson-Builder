@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { answerApi } from '../../api/answer.api';
+import VoiceButton from './VoiceButton';
 import './CheckpointBox.css';
 
 const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMode, onCorrect, onReview }) => {
@@ -12,9 +13,9 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
 
   const handleSubmit = async (selectedAnswer) => {
     const finalAnswer = selectedAnswer || answer;
-    
+
     if (!finalAnswer || !finalAnswer.trim()) {
-      setValidationError('Vui lòng nhập câu trả lời của em nhé!');
+      setValidationError('Vui lòng nhập câu trả lời của lớp.');
       return;
     }
 
@@ -28,14 +29,14 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
         question: checkpoint.question,
         correctAnswer: checkpoint.correctAnswer,
         classAnswer: finalAnswer,
-        knowledgePoint: knowledgePoint,
-        answerMode: answerMode
+        knowledgePoint,
+        answerMode
       });
 
       if (result.ok) {
         setEvaluation(result);
       } else {
-        setValidationError('Lỗi khi chấm điểm: ' + result.error);
+        setValidationError('Lỗi khi chấm điểm: ' + (result.error || 'Không rõ nguyên nhân'));
       }
     } catch (error) {
       console.error('Submit answer failed:', error);
@@ -45,13 +46,18 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
     }
   };
 
+  const handleVoiceTranscript = (transcript) => {
+    setAnswer(transcript);
+    handleSubmit(transcript);
+  };
+
   const handleNextAction = () => {
     if (evaluation.nextAction === 'continue') {
       onCorrect(checkpoint.id);
     } else if (evaluation.nextAction === 'review') {
       onReview(evaluation.reviewSlideId, checkpoint.id);
     }
-    // Reset state
+
     setEvaluation(null);
     setAnswer('');
   };
@@ -65,48 +71,56 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
 
       {!evaluation ? (
         <div className="checkpoint-body">
-          {checkpoint.type === 'multiple_choice' ? (
-            <div className="options-grid">
-              {checkpoint.options.map((opt, idx) => (
-                <button 
-                  key={idx} 
-                  className="option-btn"
-                  onClick={() => handleSubmit(opt)}
-                  disabled={isSubmitting}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="short-text-area">
-              <input 
-                type="text" 
-                placeholder="Nhập câu trả lời của lớp..." 
-                value={answer}
-                onChange={(e) => {
-                  setAnswer(e.target.value);
-                  if (validationError) setValidationError('');
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                disabled={isSubmitting}
-              />
-              <button 
-                className="submit-btn" 
-                onClick={() => handleSubmit()}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Đang kiểm tra...' : 'Gửi câu trả lời'}
-              </button>
-            </div>
+          {checkpoint.type === 'multiple_choice' && (
+            <>
+              <div className="options-grid">
+                {(checkpoint.options || []).map((opt, idx) => (
+                  <button
+                    key={idx}
+                    className="option-btn"
+                    onClick={() => handleSubmit(opt)}
+                    disabled={isSubmitting}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              <div className="answer-divider">Hoặc cả lớp trả lời bằng câu riêng</div>
+            </>
           )}
+
+          <div className="class-answer-area">
+            <input
+              type="text"
+              placeholder="Nhập câu trả lời chung của lớp..."
+              value={answer}
+              onChange={(e) => {
+                setAnswer(e.target.value);
+                if (validationError) setValidationError('');
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              disabled={isSubmitting}
+            />
+            <button
+              className="submit-btn"
+              onClick={() => handleSubmit()}
+              disabled={isSubmitting || !answer.trim()}
+            >
+              {isSubmitting ? 'Đang kiểm tra...' : 'Gửi câu trả lời'}
+            </button>
+            <VoiceButton
+              onTranscript={handleVoiceTranscript}
+              isProcessing={isSubmitting}
+            />
+          </div>
+
           {validationError && <div className="validation-error">{validationError}</div>}
         </div>
       ) : (
         <div className={`evaluation-result ${evaluation.isCorrect ? 'correct' : 'wrong'}`}>
           <div className="result-header">
-            <span className="result-icon">{evaluation.isCorrect ? '✅' : '❌'}</span>
-            <span className="result-title">{evaluation.isCorrect ? 'Tuyệt vời!' : 'Chưa đúng rồi...'}</span>
+            <span className="result-icon">{evaluation.isCorrect ? 'OK' : '!'}</span>
+            <span className="result-title">{evaluation.isCorrect ? 'Đúng rồi!' : 'Chưa đúng rồi...'}</span>
           </div>
           <p className="feedback-text">{evaluation.feedback}</p>
           <div className="explanation-box">

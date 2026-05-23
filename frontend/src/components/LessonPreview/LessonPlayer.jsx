@@ -141,6 +141,7 @@ const LessonPlayer = ({ lesson, onSlideChange }) => {
           <AudioPlayer 
             src={currentSlide.audio} 
             script={currentSlide.script}
+            forceTTS={Boolean(currentSlide.audioNeedsUpdate)}
             key={currentSlide.id} 
           />
         )}

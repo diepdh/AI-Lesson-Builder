@@ -3,7 +3,7 @@ const lessonService = require('./lesson.service');
 const promptBuilder = require('../utils/prompt-builder');
 
 class AuthoringService {
-  async processAuthoringChat(message, currentSlideId, chatHistory = []) {
+  async processAuthoringChat(message, currentSlideId, chatHistory = [], intent = null) {
     const lessonResult = lessonService.getLesson();
     if (!lessonResult.ok) {
       return { ok: false, error: 'Could not load current lesson for authoring', details: lessonResult.error };
@@ -11,16 +11,16 @@ class AuthoringService {
 
     const currentLesson = lessonResult.lesson;
 
-    if (!this._shouldApplyEdit(message)) {
+    if (!this._shouldApplyEdit(message, intent)) {
       return await this._handleConversation(message, currentLesson, currentSlideId, chatHistory);
     }
 
-    if (this._isCheckpointRequest(message)) {
+    if (this._isCheckpointRequest(message, intent)) {
       return await this._addCheckpoint(message, currentLesson, currentSlideId);
     }
 
     const systemPrompt = promptBuilder.buildAuthoringSystemPrompt();
-    const userPrompt = promptBuilder.buildAuthoringUserPrompt(message, currentLesson, currentSlideId);
+    const userPrompt = promptBuilder.buildAuthoringUserPrompt(message, currentLesson, currentSlideId, intent);
 
     try {
       const aiResponse = await llmService.callLLMForJSON({
@@ -33,7 +33,16 @@ class AuthoringService {
         return { ok: false, error: 'LLM did not return updatedLesson field' };
       }
 
-      const updateResult = lessonService.updateLesson(aiResponse.updatedLesson);
+      const normalizedLesson = this._mergeLessonPreserveMedia(currentLesson, aiResponse.updatedLesson);
+      if (!normalizedLesson.ok) {
+        return {
+          ok: false,
+          error: 'LLM returned an invalid lesson update',
+          details: normalizedLesson.error
+        };
+      }
+
+      const updateResult = lessonService.updateLesson(normalizedLesson.lesson);
       if (!updateResult.ok) {
         return {
           ok: false,
@@ -69,7 +78,8 @@ class AuthoringService {
       .replace(/đ/g, 'd');
   }
 
-  _shouldApplyEdit(message) {
+  _shouldApplyEdit(message, intent) {
+    if (intent && intent !== 'general_conversation') return true;
     const text = this._normalizeText(message);
     const applyWords = [
       'hay', 'lam luon', 'thuc hien', 'ap dung', 'chot', 'ok lam',
@@ -138,7 +148,8 @@ class AuthoringService {
     }
   }
 
-  _isCheckpointRequest(message) {
+  _isCheckpointRequest(message, intent) {
+    if (intent === 'add_checkpoint_current_slide') return true;
     const text = this._normalizeText(message);
     return (text.includes('checkpoint') || text.includes('trac nghiem') || text.includes('cau hoi'))
       && (text.includes('them') || text.includes('tao') || text.includes('add'));
@@ -226,6 +237,54 @@ class AuthoringService {
       explanation: cp.explanation || 'Câu trả lời đúng.',
       wrongFeedback: cp.wrongFeedback || 'Chưa chính xác, hãy xem lại nội dung slide.',
       reviewSlideId: cp.reviewSlideId || slideId
+    };
+  }
+
+  _mergeLessonPreserveMedia(currentLesson, incomingLesson) {
+    if (!incomingLesson || !Array.isArray(incomingLesson.slides)) {
+      return { ok: false, error: 'updatedLesson.slides must be a non-empty array' };
+    }
+
+    let nextSlides;
+    try {
+      const currentSlideById = new Map((currentLesson.slides || []).map((slide) => [slide.id, slide]));
+      const seen = new Set();
+      nextSlides = incomingLesson.slides.map((slide, index) => {
+        if (!slide || typeof slide !== 'object' || !slide.id) {
+          throw new Error(`slides[${index}] is missing id`);
+        }
+        if (seen.has(slide.id)) {
+          throw new Error(`Duplicate slide id in updatedLesson: ${slide.id}`);
+        }
+        seen.add(slide.id);
+
+        const currentSlide = currentSlideById.get(slide.id);
+        if (!currentSlide) {
+          return slide;
+        }
+
+        const scriptChanged = typeof slide.script === 'string'
+          && typeof currentSlide.script === 'string'
+          && slide.script.trim() !== currentSlide.script.trim();
+
+        return {
+          ...slide,
+          image: currentSlide.image,
+          audio: currentSlide.audio,
+          video: currentSlide.video,
+          audioNeedsUpdate: Boolean(currentSlide.audio) && scriptChanged
+        };
+      });
+    } catch (error) {
+      return { ok: false, error: error.message };
+    }
+
+    return {
+      ok: true,
+      lesson: {
+        ...incomingLesson,
+        slides: nextSlides
+      }
     };
   }
 }
