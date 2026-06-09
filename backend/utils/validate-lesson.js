@@ -39,6 +39,42 @@ function validateLesson(lesson) {
         if (!cp.question) errors.push(`${cpPath}: Missing question`);
         if (!cp.correctAnswer) errors.push(`${cpPath}: Missing correctAnswer`);
         if (!cp.reviewSlideId) errors.push(`${cpPath}: Missing reviewSlideId`);
+
+        const allowedTypes = ['multiple_choice', 'short_answer', 'image_choice', 'image_ordering'];
+        if (cp.type && !allowedTypes.includes(cp.type)) {
+          errors.push(`${cpPath}: Unsupported type ${cp.type}`);
+        }
+
+        if (cp.type === 'multiple_choice' && (!Array.isArray(cp.options) || cp.options.length < 2)) {
+          errors.push(`${cpPath}: multiple_choice requires at least 2 options`);
+        }
+
+        if (cp.type === 'image_choice') {
+          if (!Array.isArray(cp.options) || cp.options.length < 2) {
+            errors.push(`${cpPath}: image_choice requires at least 2 options`);
+          } else {
+            cp.options.forEach((option, optionIndex) => {
+              if (!option.id) errors.push(`${cpPath}.options[${optionIndex}]: Missing id`);
+              if (!option.label) errors.push(`${cpPath}.options[${optionIndex}]: Missing label`);
+              if (!option.image) errors.push(`${cpPath}.options[${optionIndex}]: Missing image`);
+            });
+          }
+        }
+
+        if (cp.type === 'image_ordering') {
+          if (!Array.isArray(cp.items) || cp.items.length < 2) {
+            errors.push(`${cpPath}: image_ordering requires at least 2 items`);
+          } else {
+            cp.items.forEach((item, itemIndex) => {
+              if (!item.id) errors.push(`${cpPath}.items[${itemIndex}]: Missing id`);
+              if (!item.label) errors.push(`${cpPath}.items[${itemIndex}]: Missing label`);
+              if (!item.image) errors.push(`${cpPath}.items[${itemIndex}]: Missing image`);
+            });
+          }
+          if (!Array.isArray(cp.correctOrder) || cp.correctOrder.length < 2) {
+            errors.push(`${cpPath}: image_ordering requires correctOrder`);
+          }
+        }
       }
     });
 

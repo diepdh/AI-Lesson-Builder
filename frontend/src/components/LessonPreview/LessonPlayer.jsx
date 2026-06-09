@@ -7,10 +7,11 @@ import CheckpointBox from './CheckpointBox';
 import ClassroomChat from './ClassroomChat';
 import './LessonPlayer.css';
 
-const LessonPlayer = ({ lesson, onSlideChange }) => {
+const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCheckpoint, setShowCheckpoint] = useState(false);
+  const [audioCompleted, setAudioCompleted] = useState(false);
   const [passedCheckpoints, setPassedCheckpoints] = useState(new Set());
   const [reviewState, setReviewState] = useState(null); // { originalIndex, checkpointId }
 
@@ -19,29 +20,53 @@ const LessonPlayer = ({ lesson, onSlideChange }) => {
   const totalSlides = slides.length;
 
   useEffect(() => {
-    // Reset player if lesson changes
     setCurrentIndex(0);
     setIsCompleted(false);
     setShowCheckpoint(false);
+    setAudioCompleted(false);
     setPassedCheckpoints(new Set());
     setReviewState(null);
   }, [lesson?.lessonId]);
 
-  // Báo cáo slide hiện tại ra ngoài để AI biết ngữ cảnh slide khi chat authoring
   useEffect(() => {
     if (currentSlide && onSlideChange) {
       onSlideChange(currentSlide.id);
     }
   }, [currentIndex, currentSlide, onSlideChange]);
 
-  // Tự động hiện checkpoint nếu slide có checkpoint và chưa pass
+  const isQuestionEnabledForSlide = (slide) => {
+    if (!slide?.checkpoint) return false;
+    return slide.questionEnabled !== false;
+  };
+
   useEffect(() => {
-    if (currentSlide?.checkpoint && !passedCheckpoints.has(currentSlide.checkpoint.id)) {
-      setShowCheckpoint(true);
-    } else {
-      setShowCheckpoint(false);
+    setShowCheckpoint(false);
+    setAudioCompleted(false);
+
+    const shouldShowAfterAudio = currentSlide?.checkpoint
+      && isQuestionEnabledForSlide(currentSlide)
+      && !passedCheckpoints.has(currentSlide.checkpoint.id);
+
+    if (!shouldShowAfterAudio || currentSlide?.audio) {
+      return undefined;
     }
+
+    const timer = setTimeout(() => {
+      setShowCheckpoint(true);
+    }, currentIndex === 0 ? 0 : 1000);
+
+    return () => clearTimeout(timer);
   }, [currentIndex, passedCheckpoints, currentSlide]);
+
+  useEffect(() => {
+    const shouldShowAfterAudio = currentSlide?.checkpoint
+      && isQuestionEnabledForSlide(currentSlide)
+      && !passedCheckpoints.has(currentSlide.checkpoint.id);
+
+    if (shouldShowAfterAudio && audioCompleted) {
+      setShowCheckpoint(true);
+    }
+  }, [audioCompleted, currentSlide, passedCheckpoints]);
 
   const handleNext = () => {
     if (currentIndex < totalSlides - 1) {
@@ -61,18 +86,25 @@ const LessonPlayer = ({ lesson, onSlideChange }) => {
     setCurrentIndex(0);
     setIsCompleted(false);
     setShowCheckpoint(false);
+    setAudioCompleted(false);
     setPassedCheckpoints(new Set());
     setReviewState(null);
   };
 
   const handleCorrect = (checkpointId) => {
-    setPassedCheckpoints(prev => new Set([...prev, checkpointId]));
+    setPassedCheckpoints((prev) => new Set([...prev, checkpointId]));
     setReviewState(null);
-    // Sau khi pass, Next button sẽ được enabled tự động qua useEffect
+    setTimeout(() => {
+      setCurrentIndex((prevIndex) => {
+        if (prevIndex < totalSlides - 1) return prevIndex + 1;
+        setIsCompleted(true);
+        return prevIndex;
+      });
+    }, 500);
   };
 
   const handleReview = (reviewSlideId, checkpointId) => {
-    const reviewIndex = slides.findIndex(s => s.id === reviewSlideId);
+    const reviewIndex = slides.findIndex((s) => s.id === reviewSlideId);
     if (reviewIndex !== -1) {
       setReviewState({ originalIndex: currentIndex, checkpointId });
       setCurrentIndex(reviewIndex);
@@ -85,19 +117,29 @@ const LessonPlayer = ({ lesson, onSlideChange }) => {
     }
   };
 
-  const isNextDisabled = currentSlide?.checkpoint && !passedCheckpoints.has(currentSlide.checkpoint.id);
+  const shouldAskCheckpoint = currentSlide?.checkpoint
+    && isQuestionEnabledForSlide(currentSlide)
+    && !passedCheckpoints.has(currentSlide.checkpoint.id);
+
+  const isNextDisabled = shouldAskCheckpoint;
+
+  const handleToggleQuestion = () => {
+    if (!currentSlide?.checkpoint || !onToggleSlideQuestion) return;
+    const nextEnabled = !isQuestionEnabledForSlide(currentSlide);
+    onToggleSlideQuestion(currentSlide.id, nextEnabled);
+  };
 
   if (!lesson) return <div className="player-empty">Đang tải bài học...</div>;
 
   return (
     <div className="lesson-player">
       <ProgressBar current={currentIndex + 1} total={totalSlides} />
-      
+
       {reviewState && (
         <div className="review-banner">
-          <span>📖 Đang ôn tập kiến thức...</span>
+          <span>Đang ôn tập kiến thức...</span>
           <button className="back-to-cp-btn" onClick={handleBackToCheckpoint}>
-            Quay lại câu hỏi ↩️
+            Quay lại câu hỏi
           </button>
         </div>
       )}
@@ -106,9 +148,9 @@ const LessonPlayer = ({ lesson, onSlideChange }) => {
         <div className="slide-area">
           <SlideViewer slide={currentSlide} />
         </div>
-        
+
         {showCheckpoint && currentSlide?.checkpoint && (
-          <CheckpointBox 
+          <CheckpointBox
             checkpoint={currentSlide.checkpoint}
             lessonId={lesson.lessonId}
             slideId={currentSlide.id}
@@ -116,12 +158,13 @@ const LessonPlayer = ({ lesson, onSlideChange }) => {
             answerMode={lesson.classroomMode?.mode || 'teacher_led_shared_answer'}
             onCorrect={handleCorrect}
             onReview={handleReview}
+            autoContinue
           />
         )}
 
         {!showCheckpoint && (
-          <ClassroomChat 
-            lessonId={lesson.lessonId} 
+          <ClassroomChat
+            lessonId={lesson.lessonId}
             currentSlideId={currentSlide?.id}
             classroomMode={lesson.classroomMode}
           />
@@ -129,32 +172,45 @@ const LessonPlayer = ({ lesson, onSlideChange }) => {
       </div>
 
       <div className="player-controls">
-        <button 
-          className="nav-btn prev" 
-          onClick={handlePrev} 
+        <button
+          className="nav-btn prev"
+          onClick={handlePrev}
           disabled={currentIndex === 0 || showCheckpoint}
         >
-          ⬅️ Trang trước
+          Trang trước
         </button>
-        
+
+        {currentSlide?.checkpoint && (
+          <button
+            className={`nav-btn toggle-question ${isQuestionEnabledForSlide(currentSlide) ? 'on' : 'off'}`}
+            onClick={handleToggleQuestion}
+            title="Bật hoặc tắt câu hỏi phụ cho slide này"
+          >
+            {isQuestionEnabledForSlide(currentSlide) ? 'Tắt câu hỏi phụ' : 'Bật câu hỏi phụ'}
+          </button>
+        )}
+
         {currentSlide?.audio && !showCheckpoint && (
-          <AudioPlayer 
-            src={currentSlide.audio} 
+          <AudioPlayer
+            src={currentSlide.audio}
             script={currentSlide.script}
             forceTTS={Boolean(currentSlide.audioNeedsUpdate)}
-            key={currentSlide.id} 
+            autoPlay={currentIndex !== 0}
+            autoPlayDelay={currentIndex === 0 ? 0 : 1000}
+            startLabel={currentIndex === 0 ? 'Bắt đầu' : 'Phát lời giảng'}
+            replayLabel="Phát lại lời giảng"
+            onEnded={() => setAudioCompleted(true)}
+            key={currentSlide.id}
           />
         )}
 
-        <button 
-          className="nav-btn next" 
+        <button
+          className="nav-btn next"
           onClick={handleNext}
           disabled={isNextDisabled}
-          title={isNextDisabled ? "Vui lòng hoàn thành câu hỏi để tiếp tục" : ""}
+          title={isNextDisabled ? 'Vui lòng hoàn thành câu hỏi để tiếp tục' : ''}
         >
-          {currentIndex === totalSlides - 1 && !isNextDisabled 
-            ? 'Hoàn thành 🏁' 
-            : 'Trang sau ➡️'}
+          {currentIndex === totalSlides - 1 && !isNextDisabled ? 'Hoàn thành' : 'Trang sau'}
         </button>
       </div>
 

@@ -81,7 +81,16 @@
   </aside>
 
   <script>
-    const state = { lesson: null, index: 0, chatHistory: [], hasUserInteracted: false, recognition: null };
+    const state = {
+      lesson: null,
+      index: 0,
+      chatHistory: [],
+      hasUserInteracted: false,
+      recognition: null,
+      pendingCheckpoint: null,
+      checkpointTimer: null,
+      audioTimer: null
+    };
     const el = {
       title: document.getElementById('lessonTitle'),
       counter: document.getElementById('counter'),
@@ -115,6 +124,11 @@
     }
 
     function render(autoplay = true) {
+      clearTimeout(state.audioTimer);
+      clearTimeout(state.checkpointTimer);
+      state.pendingCheckpoint = null;
+      el.checkpoint.hidden = true;
+      el.checkpoint.innerHTML = '';
       const lesson = state.lesson;
       if (!lesson || !lesson.slides?.length) {
         el.stage.innerHTML = '<div class="empty">Chưa có dữ liệu bài giảng.</div>';
@@ -125,6 +139,7 @@
       el.counter.textContent = `Trang ${state.index + 1} / ${lesson.slides.length}`;
       el.progress.style.width = `${((state.index + 1) / lesson.slides.length) * 100}%`;
       el.script.textContent = slide.script || '';
+      state.pendingCheckpoint = slide.checkpoint && slide.questionEnabled !== false ? slide.checkpoint : null;
 
       if (slide.video) {
         el.stage.innerHTML = `<video src="${slide.video}" controls></video>`;
@@ -137,17 +152,31 @@
       if (slide.audio) {
         el.audio.src = slide.audio;
         el.audio.hidden = false;
-        if (autoplay || state.hasUserInteracted) {
-          setTimeout(() => el.audio.play().catch(() => {}), 80);
+        el.replay.textContent = state.index === 0 ? 'Bắt đầu' : 'Phát lại lời giảng';
+        if (autoplay && state.index > 0) {
+          state.audioTimer = setTimeout(() => el.audio.play().catch(() => {}), 1000);
         }
       } else {
         el.audio.removeAttribute('src');
         el.audio.hidden = true;
+        el.replay.textContent = 'Phát lại lời giảng';
+        if (state.pendingCheckpoint) {
+          state.checkpointTimer = setTimeout(() => showPendingCheckpoint(), state.index === 0 ? 0 : 1000);
+        }
       }
 
-      renderCheckpoint(slide.checkpoint);
       el.prev.disabled = state.index === 0;
-      el.next.disabled = state.index >= lesson.slides.length - 1;
+      updateNextState();
+    }
+
+    function showPendingCheckpoint() {
+      if (!state.pendingCheckpoint) return;
+      renderCheckpoint(state.pendingCheckpoint);
+    }
+
+    function updateNextState() {
+      const hasBlockingCheckpoint = !!state.pendingCheckpoint;
+      el.next.disabled = state.index >= state.lesson.slides.length - 1 || hasBlockingCheckpoint;
     }
 
     function renderCheckpoint(cp) {
@@ -179,6 +208,10 @@
       const feedback = el.checkpoint.querySelector('.feedback');
       const isCorrect = optionText === cp.correctAnswer;
       button.classList.add(isCorrect ? 'correct' : 'wrong');
+      if (isCorrect) {
+        state.pendingCheckpoint = null;
+        updateNextState();
+      }
       feedback.textContent = isCorrect ? (cp.explanation || 'Đúng rồi!') : (cp.wrongFeedback || 'Chưa chính xác, hãy xem lại bài.');
     }
 
@@ -256,6 +289,7 @@
       };
     }
 
+    el.audio.onended = () => showPendingCheckpoint();
     el.prev.onclick = () => { state.hasUserInteracted = true; if (state.index > 0) { state.index--; render(true); } };
     el.next.onclick = () => { state.hasUserInteracted = true; if (state.index < state.lesson.slides.length - 1) { state.index++; render(true); } };
     el.replay.onclick = () => { state.hasUserInteracted = true; if (!el.audio.hidden) { el.audio.currentTime = 0; el.audio.play().catch(() => {}); } };

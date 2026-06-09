@@ -30,13 +30,40 @@ class LessonService {
           .map(file => path.join(dir, file));
       };
 
+      const readTextFile = (filePath) => {
+        if (!filePath || !fs.existsSync(filePath)) return null;
+        const content = fs.readFileSync(filePath, 'utf-8').trim();
+        return content || null;
+      };
+
+      const getSlideNumber = (filePath) => {
+        const baseName = path.basename(filePath, path.extname(filePath));
+        const matches = baseName.match(/\d+/g);
+        if (!matches || matches.length === 0) return null;
+        return String(parseInt(matches[matches.length - 1], 10));
+      };
+
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
       const audioExtensions = ['.mp3', '.wav', '.ogg', '.m4a'];
       const videoExtensions = ['.mp4', '.webm', '.mov'];
+      const textExtensions = ['.txt'];
 
       const images = getFiles(slideFolder, imageExtensions);
       const audios = getFiles(audioFolder, audioExtensions);
       const videos = getFiles(videoFolder, videoExtensions);
+      const scriptFiles = getFiles(audioFolder, textExtensions);
+      const scriptsByBaseName = new Map();
+      const scriptsBySlideNumber = new Map();
+
+      scriptFiles.forEach((scriptFile) => {
+        const baseName = path.basename(scriptFile, path.extname(scriptFile)).toLowerCase();
+        scriptsByBaseName.set(baseName, scriptFile);
+
+        const slideNumber = getSlideNumber(scriptFile);
+        if (slideNumber && !scriptsBySlideNumber.has(slideNumber)) {
+          scriptsBySlideNumber.set(slideNumber, scriptFile);
+        }
+      });
 
       if (images.length === 0) {
         return { ok: false, error: 'No images found in slide folder' };
@@ -44,17 +71,32 @@ class LessonService {
 
       const slides = images.map((img, index) => {
         const slideId = `slide-${(index + 1).toString().padStart(2, '0')}`;
+        const audioPath = audios[index];
+        const audioBaseName = audioPath
+          ? path.basename(audioPath, path.extname(audioPath)).toLowerCase()
+          : null;
+        const audioSlideNumber = audioPath ? getSlideNumber(audioPath) : null;
+        const scriptPath = audioBaseName && scriptsByBaseName.has(audioBaseName)
+          ? scriptsByBaseName.get(audioBaseName)
+          : scriptsBySlideNumber.get(audioSlideNumber || String(index + 1));
+        const scriptFromFile = readTextFile(scriptPath);
+
         const slide = {
           id: slideId,
           order: index + 1,
           title: `Trang ${index + 1}`,
           image: `/api/media?path=${encodeURIComponent(img)}`,
-          script: `Đây là nội dung trang thứ ${index + 1}.`,
+          script: scriptFromFile || `Đây là nội dung trang thứ ${index + 1}.`,
           knowledgePoint: "Kiến thức cơ bản"
         };
 
-        if (audios[index]) {
-          slide.audio = `/api/media?path=${encodeURIComponent(audios[index])}`;
+        if (scriptFromFile) {
+          slide.scriptSource = 'audio_text_file';
+          slide.scriptFile = `/api/media?path=${encodeURIComponent(scriptPath)}`;
+        }
+
+        if (audioPath) {
+          slide.audio = `/api/media?path=${encodeURIComponent(audioPath)}`;
         }
 
         if (videos[index]) {
@@ -85,7 +127,21 @@ class LessonService {
     const currentLesson = lessonResult.lesson;
     const workingLesson = JSON.parse(JSON.stringify(currentLesson));
     const objectivesText = Array.isArray(learningObjectives) ? learningObjectives.filter(Boolean) : [];
+    let removedCheckpointCount = 0;
     const learner = targetLearner || currentLesson.targetLearner || 'Học sinh';
+
+    workingLesson.slides = (workingLesson.slides || []).map((slide) => {
+      if (!slide || typeof slide !== 'object') return slide;
+      const nextSlide = { ...slide };
+      if (nextSlide.checkpoint) {
+        removedCheckpointCount += 1;
+        delete nextSlide.checkpoint;
+      }
+      if (Object.prototype.hasOwnProperty.call(nextSlide, 'questionEnabled')) {
+        delete nextSlide.questionEnabled;
+      }
+      return nextSlide;
+    });
 
     const candidates = workingLesson.slides
       .map((slide, index) => ({ slide, index }))
@@ -95,6 +151,20 @@ class LessonService {
       });
 
     if (candidates.length === 0) {
+      if (removedCheckpointCount > 0) {
+        const updateResult = this.updateLesson(workingLesson);
+        if (!updateResult.ok) return updateResult;
+        return {
+          ok: true,
+          lesson: updateResult.lesson,
+          updatedLesson: updateResult.lesson,
+          backupPath: updateResult.backupPath,
+          message: 'Khong co slide nao can lam giau noi dung. Da xoa checkpoint de giao vien tao lai trong Builder.',
+          enrichedCount: 0,
+          removedCheckpointCount
+        };
+      }
+
       return {
         ok: true,
         lesson: currentLesson,
@@ -118,13 +188,21 @@ class LessonService {
         });
 
         if (aiData) {
-          const normalizedCheckpoint = this._normalizeGeneratedCheckpoint(aiData.checkpoint, slide.id);
-          workingLesson.slides[index] = {
-            ...workingLesson.slides[index],
-            script: aiData.script || workingLesson.slides[index].script,
-            knowledgePoint: aiData.knowledgePoint || workingLesson.slides[index].knowledgePoint,
-            checkpoint: normalizedCheckpoint || workingLesson.slides[index].checkpoint || null
+          const currentSlide = workingLesson.slides[index];
+          const hasScriptFromFile = currentSlide.scriptSource === 'audio_text_file';
+          const normalizedCheckpoint = this._normalizeGeneratedCheckpoint(aiData.checkpoint, currentSlide.id);
+          const enrichedSlide = {
+            ...currentSlide,
+            script: hasScriptFromFile ? currentSlide.script : (aiData.script || currentSlide.script),
+            knowledgePoint: aiData.knowledgePoint || workingLesson.slides[index].knowledgePoint
           };
+
+          if (normalizedCheckpoint) {
+            enrichedSlide.checkpoint = normalizedCheckpoint;
+            enrichedSlide.questionEnabled = true;
+          }
+
+          workingLesson.slides[index] = enrichedSlide;
           enrichedCount += 1;
         }
       } catch (error) {
@@ -141,6 +219,7 @@ class LessonService {
       updatedLesson: updateResult.lesson,
       backupPath: updateResult.backupPath,
       enrichedCount,
+      removedCheckpointCount,
       errors
     };
   }
@@ -223,9 +302,14 @@ class LessonService {
   }
 
   async _generateSlideContent({ slide, learner, objectivesText, lessonTitle }) {
+    const hasScriptFromFile = slide.scriptSource === 'audio_text_file';
+    const scriptSourceLabel = hasScriptFromFile
+      ? 'Script gốc được giáo viên chuẩn bị trong file .txt cùng thư mục audio.'
+      : 'Script hiện tại có thể là nội dung tạm nếu chưa có file .txt.';
     const systemPrompt = [
       'Bạn là trợ giảng AI biên soạn nội dung bài học cho giáo viên tiểu học.',
       'Hãy tạo nội dung phù hợp lứa tuổi, rõ ràng, ngắn gọn, đúng trọng tâm.',
+      'Luôn bám sát script gốc của slide. Không bịa thêm kiến thức ngoài nội dung script.',
       'Chỉ trả về JSON hợp lệ, không markdown.'
     ].join('\n');
 
@@ -234,9 +318,12 @@ class LessonService {
       `Đối tượng học: ${learner}`,
       `Mục tiêu học tập: ${objectivesText.length > 0 ? objectivesText.join('; ') : 'Chưa có'}`,
       `Slide hiện tại: ${slide.title}`,
-      `Script hiện tại: ${slide.script || ''}`,
-      `Yêu cầu: Tạo script mới và knowledgePoint cụ thể hơn.`,
-      'Nếu phù hợp, đề xuất thêm checkpoint trắc nghiệm đơn giản cho slide này.',
+      `Nguồn script: ${scriptSourceLabel}`,
+      `Script gốc của slide: ${slide.script || ''}`,
+      hasScriptFromFile
+        ? 'Yêu cầu: Giữ nguyên script gốc để không lệch với audio. Tạo knowledgePoint và checkpoint bám sát script gốc.'
+        : 'Yêu cầu: Tạo script rõ hơn từ nội dung hiện có, sau đó tạo knowledgePoint và checkpoint bám sát script.',
+      'Checkpoint phải hỏi đúng nội dung đã xuất hiện trong script gốc, không hỏi kiến thức ngoài bài.',
       'Trả về JSON theo mẫu:',
       '{',
       '  "script": "string",',

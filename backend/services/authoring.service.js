@@ -16,7 +16,7 @@ class AuthoringService {
     }
 
     if (this._isCheckpointRequest(message, intent)) {
-      return await this._addCheckpoint(message, currentLesson, currentSlideId);
+      return await this._addCheckpoint(message, currentLesson, currentSlideId, intent);
     }
 
     const systemPrompt = promptBuilder.buildAuthoringSystemPrompt();
@@ -149,29 +149,41 @@ class AuthoringService {
   }
 
   _isCheckpointRequest(message, intent) {
-    if (intent === 'add_checkpoint_current_slide') return true;
+    if ([
+      'add_checkpoint_current_slide',
+      'add_image_choice_checkpoint_current_slide',
+      'add_image_ordering_checkpoint_current_slide'
+    ].includes(intent)) return true;
     const text = this._normalizeText(message);
     return (text.includes('checkpoint') || text.includes('trac nghiem') || text.includes('cau hoi'))
       && (text.includes('them') || text.includes('tao') || text.includes('add'));
   }
 
-  async _addCheckpoint(message, lesson, currentSlideId) {
+  _checkpointTypeFromIntent(intent, message) {
+    if (intent === 'add_image_choice_checkpoint_current_slide') return 'image_choice';
+    if (intent === 'add_image_ordering_checkpoint_current_slide') return 'image_ordering';
+    const text = this._normalizeText(message);
+    if (text.includes('sap xep hinh') || text.includes('image_ordering')) return 'image_ordering';
+    if (text.includes('chon hinh') || text.includes('image_choice')) return 'image_choice';
+    return 'multiple_choice';
+  }
+
+  async _addCheckpoint(message, lesson, currentSlideId, intent = null) {
     const slide = lesson.slides.find(s => s.id === currentSlideId) || lesson.slides[0];
     if (!slide) {
       return { ok: false, error: 'No slide available for checkpoint generation' };
     }
+    const checkpointType = this._checkpointTypeFromIntent(intent, message);
+    const availableImages = this._getAvailableImagesForCheckpoint(lesson, slide.id);
 
     const systemPrompt = 'Return only valid JSON. No markdown. Create content for Vietnamese elementary students.';
-    const userPrompt = [
-      'Create one multiple-choice checkpoint JSON for this slide.',
-      'Required fields: id, type, question, options, correctAnswer, explanation, wrongFeedback, reviewSlideId.',
-      'type must be multiple_choice.',
-      `reviewSlideId must be "${slide.id}".`,
-      `Slide title: ${slide.title}`,
-      `Slide script: ${slide.script}`,
-      `Knowledge point: ${slide.knowledgePoint}`,
-      `Teacher request: ${message}`
-    ].join('\n');
+    const userPrompt = this._buildCheckpointPrompt({
+      message,
+      lesson,
+      slide,
+      checkpointType,
+      availableImages
+    });
 
     try {
       const aiResponse = await llmService.callLLMForJSON({
@@ -181,7 +193,7 @@ class AuthoringService {
         maxTokens: 700
       });
 
-      const checkpoint = this._normalizeCheckpoint(aiResponse, slide.id);
+      const checkpoint = this._normalizeCheckpoint(aiResponse, slide.id, checkpointType, availableImages);
       if (!checkpoint) {
         return { ok: false, error: 'LLM did not return a valid checkpoint' };
       }
@@ -217,12 +229,165 @@ class AuthoringService {
     }
   }
 
-  _normalizeCheckpoint(aiResponse, slideId) {
+  _getAvailableImagesForCheckpoint(lesson, currentSlideId) {
+    const slides = Array.isArray(lesson?.slides) ? lesson.slides : [];
+    const currentIndex = slides.findIndex((slide) => slide.id === currentSlideId);
+    const orderedSlides = [
+      slides[currentIndex],
+      slides[currentIndex - 1],
+      slides[currentIndex + 1],
+      ...slides
+    ].filter(Boolean);
+
+    const seen = new Set();
+    return orderedSlides
+      .filter((slide) => slide.image && !seen.has(slide.id) && seen.add(slide.id))
+      .slice(0, 4)
+      .map((slide) => ({
+        id: slide.id,
+        label: slide.title || slide.id,
+        image: slide.image
+      }));
+  }
+
+  _buildCheckpointPrompt({ message, lesson, slide, checkpointType, availableImages }) {
+    const common = [
+      `Create one checkpoint JSON for this slide.`,
+      `Required type: ${checkpointType}.`,
+      `reviewSlideId must be "${slide.id}".`,
+      `Slide title: ${slide.title}`,
+      `Slide script: ${slide.script}`,
+      `Knowledge point: ${slide.knowledgePoint}`,
+      `Target learner: ${lesson.targetLearner || 'Hoc sinh'}`,
+      `Teacher request: ${message}`,
+      `Available images: ${JSON.stringify(availableImages)}`
+    ];
+
+    if (checkpointType === 'image_choice') {
+      return [
+        ...common,
+        'Return JSON shape:',
+        '{"checkpoint":{"id":"cp-slide-id","type":"image_choice","question":"string","options":[{"id":"opt-1","label":"string","image":"image-url"}],"correctAnswer":"opt-1","explanation":"string","wrongFeedback":"string","reviewSlideId":"slide-id"}}',
+        'Use 2-4 options. Use only image URLs from Available images. correctAnswer must be one option id.'
+      ].join('\n');
+    }
+
+    if (checkpointType === 'image_ordering') {
+      return [
+        ...common,
+        'Return JSON shape:',
+        '{"checkpoint":{"id":"cp-slide-id","type":"image_ordering","question":"string","items":[{"id":"step-1","label":"string","image":"image-url"}],"correctOrder":["step-1","step-2"],"correctAnswer":"step-1,step-2","explanation":"string","wrongFeedback":"string","reviewSlideId":"slide-id"}}',
+        'Use 2-4 items. Use only image URLs from Available images. correctOrder must list item ids in the correct order.'
+      ].join('\n');
+    }
+
+    return [
+      ...common,
+      'Return JSON shape:',
+      '{"checkpoint":{"id":"cp-slide-id","type":"multiple_choice","question":"string","options":["A","B","C"],"correctAnswer":"A","explanation":"string","wrongFeedback":"string","reviewSlideId":"slide-id"}}',
+      'Use at least 3 answer options. correctAnswer must exactly match one option.'
+    ].join('\n');
+  }
+
+  _normalizeCheckpoint(aiResponse, slideId, requestedType = 'multiple_choice', availableImages = []) {
     const cp = aiResponse.checkpoint && typeof aiResponse.checkpoint === 'object'
       ? aiResponse.checkpoint
       : aiResponse;
 
     if (!cp || typeof cp !== 'object') return null;
+
+    const type = ['multiple_choice', 'image_choice', 'image_ordering'].includes(cp.type)
+      ? cp.type
+      : requestedType;
+    const fallbackImages = availableImages.length > 0
+      ? availableImages
+      : [{ id: slideId, label: 'Slide hien tai', image: '' }];
+
+    if (type === 'image_choice') {
+      const rawOptions = Array.isArray(cp.options) ? cp.options : [];
+      const options = rawOptions
+        .map((option, index) => {
+          const fallback = fallbackImages[index % fallbackImages.length] || fallbackImages[0];
+          if (typeof option === 'string') {
+            return { id: `opt-${index + 1}`, label: option, image: fallback.image };
+          }
+          return {
+            id: option.id || `opt-${index + 1}`,
+            label: option.label || option.text || fallback.label || `Lua chon ${index + 1}`,
+            image: option.image || fallback.image
+          };
+        })
+        .filter((option) => option.label && option.image);
+
+      while (options.length < Math.min(2, fallbackImages.length)) {
+        const fallback = fallbackImages[options.length];
+        options.push({
+          id: `opt-${options.length + 1}`,
+          label: fallback.label || `Lua chon ${options.length + 1}`,
+          image: fallback.image
+        });
+      }
+
+      if (!cp.question || options.length < 2) return null;
+      const optionIds = options.map((option) => option.id);
+      const correctAnswer = optionIds.includes(cp.correctAnswer) ? cp.correctAnswer : optionIds[0];
+
+      return {
+        id: cp.id || `cp-${slideId}-${Date.now()}`,
+        type: 'image_choice',
+        question: cp.question,
+        options,
+        correctAnswer,
+        explanation: cp.explanation || 'Cau tra loi dung theo noi dung bai hoc.',
+        wrongFeedback: cp.wrongFeedback || 'Chua chinh xac, hay xem lai noi dung slide.',
+        reviewSlideId: cp.reviewSlideId || slideId
+      };
+    }
+
+    if (type === 'image_ordering') {
+      const rawItems = Array.isArray(cp.items) ? cp.items : (Array.isArray(cp.options) ? cp.options : []);
+      const items = rawItems
+        .map((item, index) => {
+          const fallback = fallbackImages[index % fallbackImages.length] || fallbackImages[0];
+          if (typeof item === 'string') {
+            return { id: `step-${index + 1}`, label: item, image: fallback.image };
+          }
+          return {
+            id: item.id || `step-${index + 1}`,
+            label: item.label || item.text || fallback.label || `Buoc ${index + 1}`,
+            image: item.image || fallback.image
+          };
+        })
+        .filter((item) => item.label && item.image);
+
+      while (items.length < Math.min(2, fallbackImages.length)) {
+        const fallback = fallbackImages[items.length];
+        items.push({
+          id: `step-${items.length + 1}`,
+          label: fallback.label || `Buoc ${items.length + 1}`,
+          image: fallback.image
+        });
+      }
+
+      if (!cp.question || items.length < 2) return null;
+      const itemIds = items.map((item) => item.id);
+      const correctOrder = Array.isArray(cp.correctOrder)
+        ? cp.correctOrder.filter((id) => itemIds.includes(id))
+        : itemIds;
+      const normalizedOrder = correctOrder.length === itemIds.length ? correctOrder : itemIds;
+
+      return {
+        id: cp.id || `cp-${slideId}-${Date.now()}`,
+        type: 'image_ordering',
+        question: cp.question,
+        items,
+        correctOrder: normalizedOrder,
+        correctAnswer: normalizedOrder.join(','),
+        explanation: cp.explanation || 'Thu tu dung theo noi dung bai hoc.',
+        wrongFeedback: cp.wrongFeedback || 'Chua chinh xac, hay sap xep lai theo noi dung slide.',
+        reviewSlideId: cp.reviewSlideId || slideId
+      };
+    }
 
     const options = Array.isArray(cp.options) && cp.options.length >= 2
       ? cp.options
@@ -230,7 +395,7 @@ class AuthoringService {
 
     return {
       id: cp.id || `cp-${slideId}-${Date.now()}`,
-      type: cp.type || 'multiple_choice',
+      type: 'multiple_choice',
       question: cp.question,
       options,
       correctAnswer: cp.correctAnswer || options[0],

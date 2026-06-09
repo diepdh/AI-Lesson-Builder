@@ -35,3 +35,21 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.nav-btn.toggle-question {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.nav-btn.toggle-question.on {
+  background: #ecfeff;
+  border-color: #22d3ee;
+  color: #155e75;
+}
+
+.nav-btn.toggle-question.off {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}

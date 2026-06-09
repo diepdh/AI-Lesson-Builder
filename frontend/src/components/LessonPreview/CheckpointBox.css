@@ -86,6 +86,99 @@
   text-align: center;
 }
 
+.image-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.image-option-btn {
+  background: white;
+  border: 2px solid #dbeafe;
+  border-radius: 8px;
+  color: #0f3f8c;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  min-height: 160px;
+  padding: 10px;
+  text-align: center;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.image-option-btn:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.image-option-btn img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.image-option-btn span {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ordering-area {
+  display: grid;
+  gap: 10px;
+}
+
+.ordering-item {
+  align-items: center;
+  background: white;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 96px 1fr auto;
+  padding: 10px;
+}
+
+.ordering-item img {
+  width: 96px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.ordering-label {
+  color: #0f3f8c;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ordering-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.ordering-controls button {
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  cursor: pointer;
+  min-height: 36px;
+  padding: 0 10px;
+}
+
+.ordering-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ordering-submit {
+  margin-top: 4px;
+  width: 100%;
+}
+
 .submit-btn {
   background-color: #3b82f6;
   color: white;
@@ -177,12 +270,35 @@
   opacity: 0.9;
 }
 
+.auto-next-text {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 600;
+  text-align: center;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (max-width: 760px) {
-  .options-grid {
+  .options-grid,
+  .image-options-grid {
     grid-template-columns: 1fr;
   }
 
   .class-answer-area {
     flex-direction: column;
+  }
+
+  .ordering-item {
+    grid-template-columns: 80px 1fr;
+  }
+
+  .ordering-controls {
+    grid-column: 1 / -1;
   }
 }

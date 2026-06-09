@@ -84,6 +84,18 @@ const LeftChatPanel = ({ messages, setMessages, onLessonUpdate, currentSlideId }
 
   const quickActions = [
     {
+      label: 'Chọn hình',
+      icon: '+',
+      intent: 'add_image_choice_checkpoint_current_slide',
+      prompt: 'Tạo 1 checkpoint dạng image_choice: học sinh chọn hình đúng cho slide hiện tại.'
+    },
+    {
+      label: 'Sắp xếp hình',
+      icon: '^',
+      intent: 'add_image_ordering_checkpoint_current_slide',
+      prompt: 'Tạo 1 checkpoint dạng image_ordering: học sinh sắp xếp các hình theo đúng thứ tự cho slide hiện tại.'
+    },
+    {
       label: 'Thêm checkpoint',
       icon: '+',
       intent: 'add_checkpoint_current_slide',

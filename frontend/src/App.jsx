@@ -6,14 +6,16 @@ import SetupScreen from './components/SetupScreen/SetupScreen';
 import { lessonApi } from './api/lesson.api';
 import './styles.css';
 
+const createInitialAuthoringMessages = () => [
+  { role: 'assistant', text: 'Chào thầy/cô! Em là trợ lý AI giúp chỉnh sửa bài giảng. Thầy/cô muốn em giúp gì ạ?' }
+];
+
 function App() {
   const [health, setHealth] = useState({ ok: true });
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('preview');
-  const [authoringMessages, setAuthoringMessages] = useState([
-    { role: 'assistant', text: 'Chào thầy/cô! Em là trợ lý AI giúp chỉnh sửa bài giảng. Thầy/cô muốn em giúp gì ạ?' }
-  ]);
+  const [authoringMessages, setAuthoringMessages] = useState(createInitialAuthoringMessages);
   const [currentSlideId, setCurrentSlideId] = useState(null);
   const [error, setError] = useState(null);
   const [showSetup, setShowSetup] = useState(false);
@@ -79,6 +81,15 @@ function App() {
     }
   };
 
+  const resetAuthoringChat = () => {
+    setAuthoringMessages(createInitialAuthoringMessages());
+  };
+
+  const handleLessonInitialized = (updatedLesson) => {
+    resetAuthoringChat();
+    handleLessonUpdate(updatedLesson);
+  };
+
   const handleExport = async () => {
     try {
       const res = await lessonApi.exportWebapp();
@@ -95,6 +106,7 @@ function App() {
 
   const handleCreateNewLesson = () => {
     setError(null);
+    resetAuthoringChat();
     setShowSetup(true);
   };
 
@@ -112,11 +124,67 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const handleToggleSlideQuestion = async (slideId, enabled) => {
+    if (!lesson || !slideId) return;
+
+    const updatedLesson = {
+      ...lesson,
+      slides: (lesson.slides || []).map((slide) => {
+        if (slide.id !== slideId) return slide;
+        return {
+          ...slide,
+          questionEnabled: enabled
+        };
+      })
+    };
+
+    setLesson(updatedLesson);
+
+    const response = await lessonApi.updateLesson(updatedLesson);
+    if (!response.ok) {
+      setError('Không thể cập nhật trạng thái câu hỏi cho slide.');
+      setLesson(lesson);
+      return;
+    }
+
+    if (response.lesson) {
+      setLesson(response.lesson);
+    }
+  };
+
+  const renderQuestionAudit = () => {
+    if (!lesson?.slides?.length) return null;
+    return (
+      <div className="question-audit">
+        <h4>Trạng thái câu hỏi theo slide</h4>
+        <div className="audit-grid">
+          {lesson.slides.map((slide) => {
+            const hasCheckpoint = Boolean(slide.checkpoint);
+            const questionEnabled = hasCheckpoint ? slide.questionEnabled !== false : false;
+            return (
+              <div key={slide.id} className="audit-item">
+                <div className="audit-title">{slide.id} - {slide.title}</div>
+                <div className={`audit-tag ${hasCheckpoint ? 'has-cp' : 'no-cp'}`}>
+                  {hasCheckpoint ? 'Có checkpoint' : 'Không có checkpoint'}
+                </div>
+                {hasCheckpoint && (
+                  <div className={`audit-tag ${questionEnabled ? 'enabled' : 'disabled'}`}>
+                    questionEnabled: {String(questionEnabled)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   if (!loading && !error && (!lesson || showSetup)) {
     return (
       <AppShell health={health} onRetryHealth={checkHealth} onCreateNewLesson={lesson ? handleCreateNewLesson : null}>
         <SetupScreen
-          onLessonInitialized={handleLessonUpdate}
+          onLessonInitialized={handleLessonInitialized}
           onCancel={lesson ? () => setShowSetup(false) : null}
         />
       </AppShell>
@@ -171,9 +239,11 @@ function App() {
               <LessonPlayer 
                 lesson={lesson} 
                 onSlideChange={(id) => setCurrentSlideId(id)}
+                onToggleSlideQuestion={handleToggleSlideQuestion}
               />
             ) : (
               <div className="json-viewer">
+                {renderQuestionAudit()}
                 <pre>{JSON.stringify(lesson, null, 2)}</pre>
               </div>
             )

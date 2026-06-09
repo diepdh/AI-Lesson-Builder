@@ -1,15 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { answerApi } from '../../api/answer.api';
 import VoiceButton from './VoiceButton';
 import './CheckpointBox.css';
 
-const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMode, onCorrect, onReview }) => {
+const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMode, onCorrect, onReview, autoContinue = false }) => {
   const [answer, setAnswer] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [evaluation, setEvaluation] = useState(null);
   const [validationError, setValidationError] = useState('');
+  const [orderedItems, setOrderedItems] = useState([]);
+
+  useEffect(() => {
+    if (!checkpoint) return;
+    setOrderedItems(checkpoint.type === 'image_ordering' ? [...(checkpoint.items || [])].reverse() : []);
+    setEvaluation(null);
+    setAnswer('');
+    setValidationError('');
+  }, [checkpoint?.id, checkpoint?.type]);
 
   if (!checkpoint) return null;
+
+  const setLocalEvaluation = (isCorrect) => {
+    setEvaluation({
+      ok: true,
+      isCorrect,
+      feedback: isCorrect
+        ? 'Đúng rồi, cả lớp đã trả lời chính xác.'
+        : 'Chưa chính xác, cả lớp hãy xem lại nội dung slide.',
+      shouldReview: !isCorrect,
+      reviewSlideId: isCorrect ? null : checkpoint.reviewSlideId,
+      nextAction: isCorrect ? 'continue' : 'review'
+    });
+  };
+
+  const handleImageChoice = (optionId) => {
+    if (isSubmitting) return;
+    setValidationError('');
+    setLocalEvaluation(optionId === checkpoint.correctAnswer);
+  };
+
+  const moveOrderedItem = (index, direction) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= orderedItems.length) return;
+    const nextItems = [...orderedItems];
+    [nextItems[index], nextItems[nextIndex]] = [nextItems[nextIndex], nextItems[index]];
+    setOrderedItems(nextItems);
+  };
+
+  const handleSubmitOrdering = () => {
+    const currentOrder = orderedItems.map((item) => item.id);
+    const correctOrder = checkpoint.correctOrder || [];
+    const isCorrect = currentOrder.length === correctOrder.length
+      && currentOrder.every((id, index) => id === correctOrder[index]);
+    setLocalEvaluation(isCorrect);
+  };
 
   const handleSubmit = async (selectedAnswer) => {
     const finalAnswer = selectedAnswer || answer;
@@ -62,6 +106,15 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
     setAnswer('');
   };
 
+  React.useEffect(() => {
+    if (!evaluation || !autoContinue) return;
+    if (evaluation.nextAction !== 'continue') return;
+    const timer = setTimeout(() => {
+      handleNextAction();
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [evaluation, autoContinue]);
+
   return (
     <div className="checkpoint-box">
       <div className="checkpoint-header">
@@ -89,6 +142,45 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
             </>
           )}
 
+          {checkpoint.type === 'image_choice' && (
+            <div className="image-options-grid">
+              {(checkpoint.options || []).map((opt) => (
+                <button
+                  key={opt.id}
+                  className="image-option-btn"
+                  onClick={() => handleImageChoice(opt.id)}
+                  disabled={isSubmitting}
+                >
+                  <img src={opt.image} alt={opt.label || ''} />
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {checkpoint.type === 'image_ordering' && (
+            <div className="ordering-area">
+              {orderedItems.map((item, index) => (
+                <div key={item.id} className="ordering-item">
+                  <img src={item.image} alt={item.label || ''} />
+                  <span className="ordering-label">{item.label}</span>
+                  <div className="ordering-controls">
+                    <button type="button" onClick={() => moveOrderedItem(index, -1)} disabled={index === 0}>
+                      Lên
+                    </button>
+                    <button type="button" onClick={() => moveOrderedItem(index, 1)} disabled={index === orderedItems.length - 1}>
+                      Xuống
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button className="submit-btn ordering-submit" onClick={handleSubmitOrdering}>
+                Kiểm tra thứ tự
+              </button>
+            </div>
+          )}
+
+          {checkpoint.type !== 'image_choice' && checkpoint.type !== 'image_ordering' && (
           <div className="class-answer-area">
             <input
               type="text"
@@ -113,6 +205,7 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
               isProcessing={isSubmitting}
             />
           </div>
+          )}
 
           {validationError && <div className="validation-error">{validationError}</div>}
         </div>
@@ -126,9 +219,13 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
           <div className="explanation-box">
             <strong>Giải thích:</strong> {evaluation.isCorrect ? checkpoint.explanation : checkpoint.wrongFeedback}
           </div>
-          <button className="action-btn" onClick={handleNextAction}>
-            {evaluation.nextAction === 'continue' ? 'Tiếp tục bài học' : 'Xem lại kiến thức'}
-          </button>
+          {evaluation.nextAction === 'review' ? (
+            <button className="action-btn" onClick={handleNextAction}>
+              Xem lại kiến thức
+            </button>
+          ) : (
+            <div className="auto-next-text">Đã đúng, đang tự chuyển sang slide tiếp theo...</div>
+          )}
         </div>
       )}
     </div>

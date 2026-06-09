@@ -175,6 +175,70 @@ body {
   white-space: pre-wrap;
 }
 
+.question-audit {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.question-audit h4 {
+  color: #e2e8f0;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.audit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.audit-item {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.audit-title {
+  color: #cbd5e1;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.audit-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  margin-right: 6px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.audit-tag.has-cp {
+  background: #14532d;
+  color: #bbf7d0;
+}
+
+.audit-tag.no-cp {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.audit-tag.enabled {
+  background: #0c4a6e;
+  color: #bae6fd;
+}
+
+.audit-tag.disabled {
+  background: #78350f;
+  color: #fcd34d;
+}
+
 .tabs {
   display: flex;
   gap: 12px;
