@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SlideViewer from './SlideViewer';
 import AudioPlayer from './AudioPlayer';
 import ProgressBar from './ProgressBar';
@@ -11,9 +11,10 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCheckpoint, setShowCheckpoint] = useState(false);
-  const [audioCompleted, setAudioCompleted] = useState(false);
-  const [passedCheckpoints, setPassedCheckpoints] = useState(new Set());
+  const [audioCompletedSlideId, setAudioCompletedSlideId] = useState(null);
+  const [afterCorrectPlayback, setAfterCorrectPlayback] = useState(null);
   const [reviewState, setReviewState] = useState(null); // { originalIndex, checkpointId }
+  const nextAfterCorrectTimerRef = useRef(null);
 
   const slides = lesson?.slides || [];
   const currentSlide = slides[currentIndex];
@@ -23,10 +24,14 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
     setCurrentIndex(0);
     setIsCompleted(false);
     setShowCheckpoint(false);
-    setAudioCompleted(false);
-    setPassedCheckpoints(new Set());
+    setAudioCompletedSlideId(null);
+    setAfterCorrectPlayback(null);
     setReviewState(null);
   }, [lesson?.lessonId]);
+
+  useEffect(() => {
+    return () => clearTimeout(nextAfterCorrectTimerRef.current);
+  }, []);
 
   useEffect(() => {
     if (currentSlide && onSlideChange) {
@@ -40,12 +45,13 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
   };
 
   useEffect(() => {
+    clearTimeout(nextAfterCorrectTimerRef.current);
     setShowCheckpoint(false);
-    setAudioCompleted(false);
+    setAudioCompletedSlideId(null);
+    setAfterCorrectPlayback(null);
 
     const shouldShowAfterAudio = currentSlide?.checkpoint
-      && isQuestionEnabledForSlide(currentSlide)
-      && !passedCheckpoints.has(currentSlide.checkpoint.id);
+      && isQuestionEnabledForSlide(currentSlide);
 
     if (!shouldShowAfterAudio || currentSlide?.audio) {
       return undefined;
@@ -56,17 +62,16 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
     }, currentIndex === 0 ? 0 : 1000);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, passedCheckpoints, currentSlide]);
+  }, [currentIndex, currentSlide]);
 
   useEffect(() => {
     const shouldShowAfterAudio = currentSlide?.checkpoint
-      && isQuestionEnabledForSlide(currentSlide)
-      && !passedCheckpoints.has(currentSlide.checkpoint.id);
+      && isQuestionEnabledForSlide(currentSlide);
 
-    if (shouldShowAfterAudio && audioCompleted) {
+    if (shouldShowAfterAudio && audioCompletedSlideId === currentSlide.id) {
       setShowCheckpoint(true);
     }
-  }, [audioCompleted, currentSlide, passedCheckpoints]);
+  }, [audioCompletedSlideId, currentSlide]);
 
   const handleNext = () => {
     if (currentIndex < totalSlides - 1) {
@@ -86,21 +91,40 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
     setCurrentIndex(0);
     setIsCompleted(false);
     setShowCheckpoint(false);
-    setAudioCompleted(false);
-    setPassedCheckpoints(new Set());
+    setAudioCompletedSlideId(null);
+    setAfterCorrectPlayback(null);
     setReviewState(null);
   };
 
-  const handleCorrect = (checkpointId) => {
-    setPassedCheckpoints((prev) => new Set([...prev, checkpointId]));
-    setReviewState(null);
-    setTimeout(() => {
+  const advanceAfterDelay = () => {
+    clearTimeout(nextAfterCorrectTimerRef.current);
+    nextAfterCorrectTimerRef.current = setTimeout(() => {
       setCurrentIndex((prevIndex) => {
         if (prevIndex < totalSlides - 1) return prevIndex + 1;
         setIsCompleted(true);
         return prevIndex;
       });
-    }, 500);
+    }, 5000);
+  };
+
+  const handleCorrect = (checkpoint) => {
+    setReviewState(null);
+    setShowCheckpoint(false);
+
+    if (checkpoint?.afterCorrectAudio) {
+      setAfterCorrectPlayback({
+        slideId: currentSlide.id,
+        src: checkpoint.afterCorrectAudio,
+        script: checkpoint.afterCorrectScript || ''
+      });
+      return;
+    }
+
+    setCurrentIndex((prevIndex) => {
+      if (prevIndex < totalSlides - 1) return prevIndex + 1;
+      setIsCompleted(true);
+      return prevIndex;
+    });
   };
 
   const handleReview = (reviewSlideId, checkpointId) => {
@@ -119,9 +143,9 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
 
   const shouldAskCheckpoint = currentSlide?.checkpoint
     && isQuestionEnabledForSlide(currentSlide)
-    && !passedCheckpoints.has(currentSlide.checkpoint.id);
+    && !afterCorrectPlayback;
 
-  const isNextDisabled = shouldAskCheckpoint;
+  const isNextDisabled = shouldAskCheckpoint || Boolean(afterCorrectPlayback);
 
   const handleToggleQuestion = () => {
     if (!currentSlide?.checkpoint || !onToggleSlideQuestion) return;
@@ -159,6 +183,12 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
             onCorrect={handleCorrect}
             onReview={handleReview}
             autoContinue
+            autoContinueDelayMs={currentSlide.checkpoint.afterCorrectAudio ? 700 : 5000}
+            autoContinueMessage={
+              currentSlide.checkpoint.afterCorrectAudio
+                ? 'Đã đúng, đang phát tiếp lời giảng của slide này...'
+                : 'Đã đúng, sẽ tự chuyển sang slide tiếp theo sau 5 giây...'
+            }
           />
         )}
 
@@ -190,17 +220,24 @@ const LessonPlayer = ({ lesson, onSlideChange, onToggleSlideQuestion }) => {
           </button>
         )}
 
-        {currentSlide?.audio && !showCheckpoint && (
+        {(afterCorrectPlayback || currentSlide?.audio) && !showCheckpoint && (
           <AudioPlayer
-            src={currentSlide.audio}
-            script={currentSlide.script}
-            forceTTS={Boolean(currentSlide.audioNeedsUpdate)}
-            autoPlay={currentIndex !== 0}
-            autoPlayDelay={currentIndex === 0 ? 0 : 1000}
-            startLabel={currentIndex === 0 ? 'Bắt đầu' : 'Phát lời giảng'}
-            replayLabel="Phát lại lời giảng"
-            onEnded={() => setAudioCompleted(true)}
-            key={currentSlide.id}
+            src={afterCorrectPlayback?.src || currentSlide.audio}
+            script={afterCorrectPlayback?.script || currentSlide.script}
+            forceTTS={!afterCorrectPlayback && Boolean(currentSlide.audioNeedsUpdate)}
+            autoPlay={Boolean(afterCorrectPlayback) || currentIndex !== 0}
+            autoPlayDelay={afterCorrectPlayback ? 0 : (currentIndex === 0 ? 0 : 1000)}
+            startLabel={afterCorrectPlayback ? 'Phát tiếp' : (currentIndex === 0 ? 'Bắt đầu' : 'Phát lời giảng')}
+            replayLabel={afterCorrectPlayback ? 'Phát lại đoạn tiếp' : 'Phát lại lời giảng'}
+            onStarted={() => setAudioCompletedSlideId(null)}
+            onEnded={() => {
+              if (afterCorrectPlayback) {
+                advanceAfterDelay();
+                return;
+              }
+              setAudioCompletedSlideId(currentSlide.id);
+            }}
+            key={afterCorrectPlayback ? `${currentSlide.id}-after-correct` : currentSlide.id}
           />
         )}
 

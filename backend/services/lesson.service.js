@@ -36,11 +36,70 @@ class LessonService {
         return content || null;
       };
 
+      const parseScriptFileContent = (content) => {
+        if (!content) return { script: null, checkpointSourceText: null };
+
+        const lines = content.replace(/\r\n/g, '\n').split('\n');
+        const markerIndex = lines.findIndex((line) => {
+          const trimmed = line.trim().toLowerCase();
+          return trimmed === '[checkpoint]'
+            || trimmed === '# checkpoint'
+            || trimmed.startsWith('checkpoint:');
+        });
+
+        if (markerIndex === -1) {
+          return { script: content.trim(), checkpointSourceText: null };
+        }
+
+        const markerLine = lines[markerIndex].trim();
+        const markerInlineText = markerLine.toLowerCase().startsWith('checkpoint:')
+          ? markerLine.slice(markerLine.indexOf(':') + 1).trim()
+          : '';
+        const checkpointLines = [
+          markerInlineText,
+          ...lines.slice(markerIndex + 1)
+        ].map((line) => line.trim()).filter(Boolean);
+        const script = lines.slice(0, markerIndex).join('\n').trim();
+
+        return {
+          script: script || content.trim(),
+          checkpointSourceText: checkpointLines.join('\n') || null
+        };
+      };
+
       const getSlideNumber = (filePath) => {
         const baseName = path.basename(filePath, path.extname(filePath));
         const matches = baseName.match(/\d+/g);
         if (!matches || matches.length === 0) return null;
         return String(parseInt(matches[matches.length - 1], 10));
+      };
+
+      const normalizeBaseName = (filePath) => {
+        let baseName = path.basename(filePath, path.extname(filePath)).toLowerCase();
+        const duplicateExtensions = ['.txt', '.mp3', '.wav', '.ogg', '.m4a', '.mp4', '.webm', '.mov'];
+        let changed = true;
+        while (changed) {
+          changed = false;
+          duplicateExtensions.forEach((extension) => {
+            if (baseName.endsWith(extension)) {
+              baseName = baseName.slice(0, -extension.length);
+              changed = true;
+            }
+          });
+        }
+        return baseName;
+      };
+
+      const getMediaSequence = (filePath) => {
+        const baseName = normalizeBaseName(filePath);
+        const matches = baseName.match(/\d+/g);
+        if (!matches || matches.length === 0) {
+          return { slideNumber: null, partNumber: 0 };
+        }
+        return {
+          slideNumber: String(parseInt(matches[0], 10)),
+          partNumber: matches.length > 1 ? parseInt(matches[1], 10) : 0
+        };
       };
 
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
@@ -54,32 +113,75 @@ class LessonService {
       const scriptFiles = getFiles(audioFolder, textExtensions);
       const scriptsByBaseName = new Map();
       const scriptsBySlideNumber = new Map();
+      const scriptsBySequence = new Map();
 
       scriptFiles.forEach((scriptFile) => {
-        const baseName = path.basename(scriptFile, path.extname(scriptFile)).toLowerCase();
+        const baseName = normalizeBaseName(scriptFile);
         scriptsByBaseName.set(baseName, scriptFile);
 
-        const slideNumber = getSlideNumber(scriptFile);
+        const { slideNumber, partNumber } = getMediaSequence(scriptFile);
         if (slideNumber && !scriptsBySlideNumber.has(slideNumber)) {
           scriptsBySlideNumber.set(slideNumber, scriptFile);
         }
+        if (slideNumber) {
+          scriptsBySequence.set(`${slideNumber}:${partNumber}`, scriptFile);
+        }
       });
+
+      const audioGroups = new Map();
+      audios.forEach((audioPath, fallbackIndex) => {
+        const sequence = getMediaSequence(audioPath);
+        const slideNumber = sequence.slideNumber || String(fallbackIndex + 1);
+        const partNumber = sequence.partNumber || 0;
+        const group = audioGroups.get(slideNumber) || { main: null, followUps: [] };
+        if (partNumber === 0 && !group.main) {
+          group.main = audioPath;
+        } else {
+          group.followUps.push({ path: audioPath, partNumber });
+        }
+        audioGroups.set(slideNumber, group);
+      });
+
+      audioGroups.forEach((group) => {
+        group.followUps.sort((a, b) => a.partNumber - b.partNumber);
+      });
+
+      const findScriptForMedia = (mediaPath, fallbackSlideNumber = null, fallbackPartNumber = 0) => {
+        if (!mediaPath) return null;
+        const baseName = normalizeBaseName(mediaPath);
+        if (scriptsByBaseName.has(baseName)) return scriptsByBaseName.get(baseName);
+
+        const sequence = getMediaSequence(mediaPath);
+        const slideNumber = sequence.slideNumber || fallbackSlideNumber;
+        const partNumber = sequence.partNumber ?? fallbackPartNumber;
+        if (slideNumber && scriptsBySequence.has(`${slideNumber}:${partNumber}`)) {
+          return scriptsBySequence.get(`${slideNumber}:${partNumber}`);
+        }
+
+        if (slideNumber && partNumber === 0) {
+          return scriptsBySlideNumber.get(slideNumber) || null;
+        }
+
+        return null;
+      };
 
       if (images.length === 0) {
         return { ok: false, error: 'No images found in slide folder' };
       }
 
       const slides = images.map((img, index) => {
+        const slideNumber = String(index + 1);
         const slideId = `slide-${(index + 1).toString().padStart(2, '0')}`;
-        const audioPath = audios[index];
-        const audioBaseName = audioPath
-          ? path.basename(audioPath, path.extname(audioPath)).toLowerCase()
-          : null;
-        const audioSlideNumber = audioPath ? getSlideNumber(audioPath) : null;
-        const scriptPath = audioBaseName && scriptsByBaseName.has(audioBaseName)
-          ? scriptsByBaseName.get(audioBaseName)
-          : scriptsBySlideNumber.get(audioSlideNumber || String(index + 1));
-        const scriptFromFile = readTextFile(scriptPath);
+        const audioGroup = audioGroups.get(slideNumber);
+        const audioPath = audioGroup?.main || (!audioGroups.size ? audios[index] : null);
+        const afterCorrectAudio = audioGroup?.followUps?.[0] || null;
+        const scriptPath = findScriptForMedia(audioPath, slideNumber, 0);
+        const afterCorrectScriptPath = findScriptForMedia(afterCorrectAudio?.path, slideNumber, afterCorrectAudio?.partNumber || 1);
+        const scriptFileContent = readTextFile(scriptPath);
+        const afterCorrectScriptFileContent = readTextFile(afterCorrectScriptPath);
+        const parsedScript = parseScriptFileContent(scriptFileContent);
+        const parsedAfterCorrectScript = parseScriptFileContent(afterCorrectScriptFileContent);
+        const scriptFromFile = parsedScript.script;
 
         const slide = {
           id: slideId,
@@ -95,8 +197,28 @@ class LessonService {
           slide.scriptFile = `/api/media?path=${encodeURIComponent(scriptPath)}`;
         }
 
+        if (parsedScript.checkpointSourceText) {
+          slide.checkpointSourceText = parsedScript.checkpointSourceText;
+          slide.checkpoint = this._checkpointFromSourceText(parsedScript.checkpointSourceText, slideId);
+          slide.questionEnabled = Boolean(slide.checkpoint);
+        }
+
         if (audioPath) {
           slide.audio = `/api/media?path=${encodeURIComponent(audioPath)}`;
+        }
+
+        if (afterCorrectAudio?.path) {
+          slide.afterCorrectAudio = `/api/media?path=${encodeURIComponent(afterCorrectAudio.path)}`;
+          if (parsedAfterCorrectScript.script) {
+            slide.afterCorrectScript = parsedAfterCorrectScript.script;
+            slide.afterCorrectScriptFile = `/api/media?path=${encodeURIComponent(afterCorrectScriptPath)}`;
+          }
+          if (slide.checkpoint) {
+            slide.checkpoint.afterCorrectAudio = slide.afterCorrectAudio;
+            if (slide.afterCorrectScript) {
+              slide.checkpoint.afterCorrectScript = slide.afterCorrectScript;
+            }
+          }
         }
 
         if (videos[index]) {
@@ -146,6 +268,7 @@ class LessonService {
     const candidates = workingLesson.slides
       .map((slide, index) => ({ slide, index }))
       .filter(({ slide }) => {
+        if (String(slide.checkpointSourceText || '').trim()) return true;
         if (scope !== 'all') return this._isPlaceholderSlide(slide);
         return true;
       });
@@ -190,7 +313,10 @@ class LessonService {
         if (aiData) {
           const currentSlide = workingLesson.slides[index];
           const hasScriptFromFile = currentSlide.scriptSource === 'audio_text_file';
-          const normalizedCheckpoint = this._normalizeGeneratedCheckpoint(aiData.checkpoint, currentSlide.id);
+          const shouldCreateCheckpoint = Boolean(String(currentSlide.checkpointSourceText || '').trim());
+          const normalizedCheckpoint = shouldCreateCheckpoint
+            ? this._normalizeGeneratedCheckpoint(aiData.checkpoint, currentSlide.id, currentSlide.checkpointSourceText)
+            : null;
           const enrichedSlide = {
             ...currentSlide,
             script: hasScriptFromFile ? currentSlide.script : (aiData.script || currentSlide.script),
@@ -198,6 +324,12 @@ class LessonService {
           };
 
           if (normalizedCheckpoint) {
+            if (currentSlide.afterCorrectAudio) {
+              normalizedCheckpoint.afterCorrectAudio = currentSlide.afterCorrectAudio;
+            }
+            if (currentSlide.afterCorrectScript) {
+              normalizedCheckpoint.afterCorrectScript = currentSlide.afterCorrectScript;
+            }
             enrichedSlide.checkpoint = normalizedCheckpoint;
             enrichedSlide.questionEnabled = true;
           }
@@ -303,6 +435,8 @@ class LessonService {
 
   async _generateSlideContent({ slide, learner, objectivesText, lessonTitle }) {
     const hasScriptFromFile = slide.scriptSource === 'audio_text_file';
+    const checkpointSourceText = String(slide.checkpointSourceText || '').trim();
+    const shouldCreateCheckpoint = Boolean(checkpointSourceText);
     const scriptSourceLabel = hasScriptFromFile
       ? 'Script gốc được giáo viên chuẩn bị trong file .txt cùng thư mục audio.'
       : 'Script hiện tại có thể là nội dung tạm nếu chưa có file .txt.';
@@ -320,19 +454,26 @@ class LessonService {
       `Slide hiện tại: ${slide.title}`,
       `Nguồn script: ${scriptSourceLabel}`,
       `Script gốc của slide: ${slide.script || ''}`,
+      shouldCreateCheckpoint
+        ? `Yêu cầu checkpoint từ file txt: ${checkpointSourceText}`
+        : 'Slide này không có phần Checkpoint trong file txt. Không tạo câu hỏi cho slide này.',
       hasScriptFromFile
-        ? 'Yêu cầu: Giữ nguyên script gốc để không lệch với audio. Tạo knowledgePoint và checkpoint bám sát script gốc.'
-        : 'Yêu cầu: Tạo script rõ hơn từ nội dung hiện có, sau đó tạo knowledgePoint và checkpoint bám sát script.',
-      'Checkpoint phải hỏi đúng nội dung đã xuất hiện trong script gốc, không hỏi kiến thức ngoài bài.',
+        ? 'Yêu cầu: Giữ nguyên script gốc để không lệch với audio. Tạo knowledgePoint bám sát script gốc.'
+        : 'Yêu cầu: Tạo script rõ hơn từ nội dung hiện có, sau đó tạo knowledgePoint bám sát script.',
+      shouldCreateCheckpoint
+        ? 'Chỉ tạo checkpoint theo đúng câu hỏi/yêu cầu checkpoint trong file txt. Đáp án và giải thích phải dựa trên script gốc.'
+        : 'Trường checkpoint bắt buộc là null.',
+      'Nếu phần checkpoint trong file txt có nhiều lựa chọn A/B/C thì tạo type "multiple_choice" và điền options.',
+      'Nếu phần checkpoint trong file txt chỉ có Câu hỏi và Đáp án, tạo type "short_answer", không cần options.',
       'Trả về JSON theo mẫu:',
       '{',
       '  "script": "string",',
       '  "knowledgePoint": "string",',
       '  "checkpoint": {',
       '    "id": "cp-slide-xx-01",',
-      '    "type": "multiple_choice",',
+      '    "type": "multiple_choice hoặc short_answer",',
       '    "question": "string",',
-      '    "options": ["A","B","C"],',
+      '    "options": ["A","B","C"] hoặc null nếu là short_answer,',
       '    "correctAnswer": "string",',
       '    "explanation": "string",',
       '    "wrongFeedback": "string",',
@@ -359,21 +500,79 @@ class LessonService {
     return aiData;
   }
 
-  _normalizeGeneratedCheckpoint(checkpoint, slideId) {
-    if (!checkpoint || typeof checkpoint !== 'object') return null;
-    const options = Array.isArray(checkpoint.options) ? checkpoint.options.filter(Boolean) : [];
-    if (!checkpoint.question || !checkpoint.correctAnswer || options.length < 2) return null;
+  _normalizeGeneratedCheckpoint(checkpoint, slideId, checkpointSourceText = '') {
+    const fallbackCheckpoint = this._checkpointFromSourceText(checkpointSourceText, slideId);
+    if (!checkpoint || typeof checkpoint !== 'object') return fallbackCheckpoint;
 
-    return {
+    const options = Array.isArray(checkpoint.options) ? checkpoint.options.filter(Boolean) : [];
+    const type = checkpoint.type || (options.length >= 2 ? 'multiple_choice' : 'short_answer');
+    const question = checkpoint.question || fallbackCheckpoint?.question;
+    const correctAnswer = checkpoint.correctAnswer || fallbackCheckpoint?.correctAnswer;
+
+    if (!question || !correctAnswer) return fallbackCheckpoint;
+    if (type === 'multiple_choice' && options.length < 2) {
+      return {
+        ...(fallbackCheckpoint || {}),
+        id: checkpoint.id || fallbackCheckpoint?.id || `cp-${slideId}-${Date.now()}`,
+        type: 'short_answer',
+        question,
+        correctAnswer,
+        explanation: checkpoint.explanation || fallbackCheckpoint?.explanation || 'Đáp án đúng như nội dung bài học.',
+        wrongFeedback: checkpoint.wrongFeedback || fallbackCheckpoint?.wrongFeedback || 'Chưa chính xác, em hãy xem lại nội dung slide này.',
+        reviewSlideId: checkpoint.reviewSlideId || fallbackCheckpoint?.reviewSlideId || slideId
+      };
+    }
+
+    const normalized = {
       id: checkpoint.id || `cp-${slideId}-${Date.now()}`,
-      type: checkpoint.type || 'multiple_choice',
-      question: checkpoint.question,
-      options,
-      correctAnswer: checkpoint.correctAnswer,
+      type,
+      question,
+      correctAnswer,
       explanation: checkpoint.explanation || 'Đáp án đúng như nội dung bài học.',
       wrongFeedback: checkpoint.wrongFeedback || 'Chưa chính xác, em hãy xem lại nội dung slide này.',
       reviewSlideId: checkpoint.reviewSlideId || slideId
     };
+
+    if (type === 'multiple_choice') {
+      normalized.options = options;
+    }
+
+    return normalized;
+  }
+
+  _checkpointFromSourceText(sourceText, slideId) {
+    const text = String(sourceText || '').trim();
+    if (!text) return null;
+
+    const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const questionLine = lines.find((line) => /^câu hỏi/i.test(line)) || lines[0];
+    const answerLine = lines.find((line) => /^(đáp án|đáp án đúng|đáp án câu hỏi|đá án đúng|answer)/i.test(line));
+    const optionLines = lines.filter((line) => /^[A-D][\).:\-]\s+/i.test(line));
+
+    const cleanup = (line) => String(line || '')
+      .replace(/^câu hỏi(?:\s*số\s*\d*)?\s*[:：-]\s*/i, '')
+      .replace(/^(đáp án|đáp án đúng|đáp án câu hỏi(?:\s*số\s*\d*)?|đá án đúng|answer)\s*[:：-]\s*/i, '')
+      .trim();
+
+    const question = cleanup(questionLine);
+    const correctAnswer = cleanup(answerLine) || 'Câu trả lời gần đúng theo nội dung bài học.';
+    if (!question) return null;
+
+    const checkpoint = {
+      id: `cp-${slideId}-${Date.now()}`,
+      type: optionLines.length >= 2 ? 'multiple_choice' : 'short_answer',
+      question,
+      correctAnswer,
+      explanation: `Đáp án gợi ý: ${correctAnswer}`,
+      wrongFeedback: 'Chưa chính xác, em hãy xem lại nội dung slide này.',
+      reviewSlideId: slideId
+    };
+
+    if (optionLines.length >= 2) {
+      checkpoint.options = optionLines.map((line) => cleanup(line.replace(/^[A-D][\).:\-]\s*/i, '')));
+    }
+
+    return checkpoint;
   }
 }
 

@@ -3,7 +3,18 @@ import { answerApi } from '../../api/answer.api';
 import VoiceButton from './VoiceButton';
 import './CheckpointBox.css';
 
-const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMode, onCorrect, onReview, autoContinue = false }) => {
+const CheckpointBox = ({
+  checkpoint,
+  lessonId,
+  slideId,
+  knowledgePoint,
+  answerMode,
+  onCorrect,
+  onReview,
+  autoContinue = false,
+  autoContinueDelayMs = 5000,
+  autoContinueMessage = 'Đã đúng, sẽ tự chuyển sang slide tiếp theo sau 5 giây...'
+}) => {
   const [answer, setAnswer] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [evaluation, setEvaluation] = useState(null);
@@ -97,7 +108,7 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
 
   const handleNextAction = () => {
     if (evaluation.nextAction === 'continue') {
-      onCorrect(checkpoint.id);
+      onCorrect(checkpoint);
     } else if (evaluation.nextAction === 'review') {
       onReview(evaluation.reviewSlideId, checkpoint.id);
     }
@@ -111,9 +122,9 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
     if (evaluation.nextAction !== 'continue') return;
     const timer = setTimeout(() => {
       handleNextAction();
-    }, 700);
+    }, autoContinueDelayMs);
     return () => clearTimeout(timer);
-  }, [evaluation, autoContinue]);
+  }, [evaluation, autoContinue, autoContinueDelayMs]);
 
   return (
     <div className="checkpoint-box">
@@ -224,7 +235,7 @@ const CheckpointBox = ({ checkpoint, lessonId, slideId, knowledgePoint, answerMo
               Xem lại kiến thức
             </button>
           ) : (
-            <div className="auto-next-text">Đã đúng, đang tự chuyển sang slide tiếp theo...</div>
+            <div className="auto-next-text">{autoContinueMessage}</div>
           )}
         </div>
       )}

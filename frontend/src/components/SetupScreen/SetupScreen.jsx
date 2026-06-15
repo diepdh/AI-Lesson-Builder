@@ -172,7 +172,7 @@ const SetupScreen = ({ onLessonInitialized, onCancel }) => {
 
         <div className="setup-help">
           <small>
-            Mẹo: đặt tên file theo thứ tự (ví dụ: slide-01.jpg, audio-01.mp3). Nếu có script, đặt file audio-01.txt cùng thư mục Audio để AI bám sát lời thoại.
+            Mẹo: đặt tên file theo thứ tự (ví dụ: slide-01.jpg, audio-01.mp3). Nếu có script, đặt file audio-01.txt cùng thư mục Audio. Chỉ những file txt có đoạn "Checkpoint:" mới được tạo câu hỏi.
           </small>
         </div>
 

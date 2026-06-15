@@ -64,7 +64,12 @@ const AudioPlayer = ({
           setIsPlaying(false);
         });
       }, autoPlayDelay);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+      };
     }
   }, [src, forceTTS, autoPlay, autoPlayDelay]);
 
